@@ -44,12 +44,12 @@ const DB = {
   },
   uid(){return 'id_'+Date.now()+'_'+Math.random().toString(36).slice(2,7)},
 
-  init(){
+  async init(){
+    var hadServer=await this.syncFromServer();
     if(!localStorage.getItem(this.KEYS.INITED)){
-      this._seed();localStorage.setItem(this.KEYS.INITED,'1');
+      if(!hadServer){this._seed()}
+      localStorage.setItem(this.KEYS.INITED,'1');
     }
-    // Push current local data to server
-    this._sync();
   },
   _seed(){
     // Empty platform — no seeded users, clubs, news, or forums.

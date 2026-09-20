@@ -9,6 +9,10 @@ const DB = {
   },
   _get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},
   _set(k,v){localStorage.setItem(k,JSON.stringify(v));this._sync()},
+  _get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},
+  _set(k,v){localStorage.setItem(k,JSON.stringify(v));this._sync()},
+  SB_URL:'https://nyrosucxqgdnmztykdir.supabase.co',
+  SB_KEY:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im55cm9zdWN4cWdkbm16dHlrZGlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk4NzUzNzAsImV4cCI6MjEwNTQ1MTM3MH0.Hvxb7YD1QezlKWlcJB7C0XIHNkVqQlSSv5XqitX06EQ',
   _syncTimer:null,
   _sync(){
     clearTimeout(this._syncTimer);
@@ -16,25 +20,24 @@ const DB = {
       var all={};
       for(var i=0;i<localStorage.length;i++){
         var key=localStorage.key(i);
+        if(key==='aip_theme'||key==='aip_campus_v1_2')continue;
         try{all[key]=JSON.parse(localStorage.getItem(key))}catch(e){}
       }
-      fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(all)}).catch(()=>{});
+      fetch(this.SB_URL+'/rest/v1/site_data?id=eq.1',{
+        method:'PUT',
+        headers:{'apikey':this.SB_KEY,'Authorization':'Bearer '+this.SB_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
+        body:JSON.stringify({id:1,data:all})
+      }).catch(()=>{});
     },500);
   },
   async syncFromServer(){
     try{
-      var r=await fetch('/api/data');
-      var d=await r.json();
-      if(d&&typeof d==='object'){
-        var keymap={users:'aip_users',forums:'aip_forums',news:'aip_news',clubs:'aip_clubs'};
-        var hasData=false;
-        for(var k in d){
-          var lk=keymap[k]||('aip_'+k);
-          if(k==='session'&&!d[k])continue;
-          if(d[k]&&(Array.isArray(d[k])?d[k].length>0:typeof d[k]==='object'))hasData=true;
-          localStorage.setItem(lk,JSON.stringify(d[k]));
-        }
-        if(hasData)return true;
+      var r=await fetch(this.SB_URL+'/rest/v1/site_data?id=eq.1&select=data',{headers:{'apikey':this.SB_KEY}});
+      var rows=await r.json();
+      if(rows&&rows[0]&&rows[0].data){
+        var d=rows[0].data;
+        for(var k in d){localStorage.setItem(k,JSON.stringify(d[k]))}
+        return true;
       }
     }catch(e){}
     return false;

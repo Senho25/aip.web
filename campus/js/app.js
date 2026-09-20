@@ -149,3 +149,5 @@ const App = {
 };
 App.initTheme();
 App.initLightbox();
+DB.init();
+DB.syncFromServer().then(()=>{if(typeof render==='function')render()});

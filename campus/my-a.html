@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My-A · AIP-Campus</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="content-layer">
+<nav class="navbar">
+  <a href="../index.html" class="navbar-brand" id="brandArea">
+    <svg class="logo-svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="20" y="26" text-anchor="middle" font-family="Georgia,serif" font-size="18" font-weight="700" fill="currentColor">A</text></svg>
+    <div><div class="name">AIP-Campus</div><div class="sub">CAMPUS · COMMUNITY · CONVERSATION</div></div>
+  </a>
+  <div class="navbar-links">
+    <a href="index.html" data-page="home">Home</a>
+    <a href="about.html" data-page="about">About</a>
+    <a href="clubs.html" data-page="clubs">Clubs</a>
+    <a href="news.html" data-page="news">News</a>
+    <a href="forum.html" data-page="forum">Forum</a>
+  </div>
+  <div class="navbar-right"></div>
+</nav>
+
+<div class="my-a-layout">
+  <aside class="my-a-sidebar">
+    <div class="my-a-quick-nav">
+      <div class="quick-nav-item active" data-sec="profile"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg> Profile</div>
+      <div class="quick-nav-item" data-sec="clubs"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg> My Clubs</div>
+      <div class="quick-nav-item" data-sec="news"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v14H4z"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="16" y2="13"/></svg> My News</div>
+      <div class="quick-nav-item" data-sec="saved"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12v18l-6-4-6 4z"/></svg> Saved</div>
+      <div class="quick-nav-item" data-sec="follows"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="10" r="2"/><path d="M3 20c0-3 3-5 6-5s6 2 6 5"/><path d="M15 20c0-2 2-3.5 4-3.5s3 1.5 3 3.5"/></svg> Following</div>
+    </div>
+  </aside>
+  <main class="my-a-main" id="main"></main>
+</div>
+
+<footer class="site-footer">© 2026 AIP-Campus · <a href="../index.html" style="text-decoration:underline">AIP-Web Home</a></footer>
+</div>
+
+<script src="js/data.js"></script><script src="js/app.js"></script>
+<script>
+App.initNav('');
+const user=DB.getCurrentUser();
+if(!user){
+  location.href='login.html';
+}else{
+  const myClubs=DB.getUserClubs();
+  const myNews=DB.getMyNews();
+  const saved=DB.getSavedNews();
+  const followingClubs=DB.getFollowedClubs();
+  const followingUsers=DB.getFollowingUsers(user.id);
+  const allForums=DB.getForums();
+  const myPosts=allForums.reduce((acc,f)=>acc.concat(f.posts.filter(p=>p.authorId===user.id)),[]);
+
+  document.getElementById('main').innerHTML=`
+    <section class="my-a-section" id="sec-profile">
+      <div class="my-a-section-title">Profile</div>
+      <div class="profile-card">
+        <div class="profile-avatar">${user.avatar||user.username.charAt(0)}</div>
+        <div>
+          <div class="profile-name">${App.esc(user.username)}</div>
+          <div class="profile-email">${App.esc(user.email||'')}</div>
+          <div class="profile-badges">
+            <span class="profile-badge">${user.role==='admin'?'ADMIN':'MEMBER'}</span>
+            <span class="profile-badge">Joined ${DB.formatDate(user.createdAt)}</span>
+          </div>
+        </div>
+        <div class="profile-stats">
+          <div class="profile-stat"><div class="profile-stat-num">${myClubs.length}</div><div class="profile-stat-label">Clubs</div></div>
+          <div class="profile-stat"><div class="profile-stat-num">${myNews.length}</div><div class="profile-stat-label">News</div></div>
+          <div class="profile-stat"><div class="profile-stat-num">${myPosts.length}</div><div class="profile-stat-label">Posts</div></div>
+        </div>
+      </div>
+      <div class="form-group" style="max-width:400px">
+        <label class="form-label">Bio</label>
+        <textarea id="bioInput" rows="3" placeholder="Tell us about yourself...">${App.esc(user.bio||'')}</textarea>
+        <button class="btn btn-outline btn-sm" onclick="saveBio()">Save Bio</button>
+      </div>
+    </section>
+
+    <section class="my-a-section" id="sec-clubs">
+      <div class="my-a-section-title">My Clubs</div>
+      <div class="club-grid">
+        ${myClubs.map(c=>`<div class="club-card tap" onclick="location.href='club-detail.html?id=${c.id}'">
+          <div class="club-icon">${c.icon}</div><div class="club-name">${App.esc(c.name)}</div>
+          <div class="club-desc">${App.esc(c.description)}</div>
+          <div class="club-meta"><span>${c.members.some(m=>m.id===user.id&&m.role==='admin')?'Admin':'Member'}</span></div>
+        </div>`).join('')||'<div class="empty-state"><div class="text">No clubs yet.</div></div>'}
+      </div>
+      <a class="btn btn-outline" style="margin-top:16px;display:inline-block" href="create-club.html">+ Create Club</a>
+    </section>
+
+    <section class="my-a-section" id="sec-news">
+      <div class="my-a-section-title">My News <a href="my-news.html" style="font-size:12px;color:var(--moss);float:right;font-weight:400">View All &rarr;</a></div>
+      ${myNews.slice(0,3).map(n=>`<div class="news-card tap" onclick="location.href='news-detail.html?id=${n.id}'" style="margin-bottom:16px">
+        <div class="thumb">${Icons.megaphone}</div>
+        <div class="body"><div><div class="cat">${App.esc(n.topic)}</div><div class="title">${App.esc(n.title)}</div></div>
+        <div class="meta"><span>${n.views} views</span><span>${n.likes} likes</span></div></div>
+      </div>`).join('')||'<div class="empty-state"><div class="text">No news published.</div></div>'}
+    </section>
+
+    <section class="my-a-section" id="sec-saved">
+      <div class="my-a-section-title">Saved News <a href="followed-news.html" style="font-size:12px;color:var(--moss);float:right;font-weight:400">View All &rarr;</a></div>
+      ${saved.slice(0,3).map(n=>`<div class="news-card tap" onclick="location.href='news-detail.html?id=${n.id}'" style="margin-bottom:16px">
+        <div class="thumb">${Icons.bookmark}</div>
+        <div class="body"><div><div class="cat">${App.esc(n.topic)}</div><div class="title">${App.esc(n.title)}</div></div></div>
+      </div>`).join('')||'<div class="empty-state"><div class="text">Nothing saved yet.</div></div>'}
+    </section>
+
+    <section class="my-a-section" id="sec-follows">
+      <div class="my-a-section-title">Following</div>
+      <h4 style="font-size:14px;margin-bottom:12px;color:var(--text-mute)">Clubs</h4>
+      <div class="club-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">
+        ${followingClubs.map(c=>`<div class="club-card tap" onclick="location.href='club-detail.html?id=${c.id}'" style="padding:20px">
+          <div class="club-icon" style="width:40px;height:40px;font-size:16px">${c.icon}</div>
+          <div class="club-name" style="font-size:16px">${App.esc(c.name)}</div>
+        </div>`).join('')||'<p style="color:var(--text-mute);font-size:13px">Not following any clubs.</p>'}
+      </div>
+      <h4 style="font-size:14px;margin:24px 0 12px;color:var(--text-mute)">People</h4>
+      <div>${followingUsers.map(u=>`<div class="comment-item" style="border-bottom:1px solid var(--line)">
+        <div class="comment-avatar" onclick="location.href='user-profile.html?uid=${u.id}'">${u.avatar||u.username.charAt(0)}</div>
+        <div class="comment-body"><span class="comment-author" onclick="location.href='user-profile.html?uid=${u.id}'" style="cursor:pointer">${App.esc(u.username)}</span>
+        <div style="font-size:12px;color:var(--text-mute)">${App.esc(u.bio||'')}</div></div>
+      </div>`).join('')||'<p style="color:var(--text-mute);font-size:13px">Not following anyone.</p>'}</div>
+    </section>
+  `;
+
+  // Quick nav
+  document.querySelectorAll('.quick-nav-item').forEach(item=>{
+    item.onclick=()=>{
+      document.querySelectorAll('.quick-nav-item').forEach(x=>x.classList.remove('active'));
+      item.classList.add('active');
+      document.getElementById('sec-'+item.dataset.sec).scrollIntoView({behavior:'smooth'});
+    };
+  });
+  // Scroll spy
+  window.addEventListener('scroll',()=>{
+    const secs=['profile','clubs','news','saved','follows'];
+    for(const s of secs){
+      const el=document.getElementById('sec-'+s);
+      if(el.getBoundingClientRect().top<200){
+        document.querySelectorAll('.quick-nav-item').forEach(x=>x.classList.toggle('active',x.dataset.sec===s));
+      }
+    }
+  });
+}
+function saveBio(){
+  const users=DB.getUsers();
+  const u=users.find(x=>x.id===DB.getCurrentUser().id);
+  u.bio=document.getElementById('bioInput').value;
+  DB._set(DB.KEYS.USERS,users);
+  DB.toast('Bio saved');
+}
+</script>
+</body></html>

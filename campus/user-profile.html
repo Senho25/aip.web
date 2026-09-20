@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profile · AIP-Campus</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="content-layer">
+<nav class="navbar">
+  <a href="../index.html" class="navbar-brand" id="brandArea">
+    <svg class="logo-svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="20" y="26" text-anchor="middle" font-family="Georgia,serif" font-size="18" font-weight="700" fill="currentColor">A</text></svg>
+    <div><div class="name">AIP-Campus</div><div class="sub">SHEN WAI · INTERNATIONAL ACADEMY</div></div>
+  </a>
+  <div class="navbar-links">
+    <a href="index.html" data-page="home">Home</a>
+    <a href="clubs.html" data-page="clubs">Clubs</a>
+    <a href="news.html" data-page="news">News</a>
+    <a href="forum.html" data-page="forum">Forum</a>
+  </div>
+  <div class="navbar-right"></div>
+</nav>
+
+<div class="container" id="main"></div>
+<footer class="site-footer">© 2026 AIP-Campus · <a href="../index.html" style="text-decoration:underline">AIP-Web Home</a></footer>
+</div>
+
+<script src="js/data.js"></script><script src="js/app.js"></script>
+<script>
+App.initNav('');
+const uid=App.getParam('uid')||App.getParam('id');
+const u=DB.getUserById(uid);
+const me=DB.getCurrentUser();
+if(!u){
+  document.getElementById('main').innerHTML='<div class="empty-state"><div class="text">User not found.</div></div>';
+}else{
+  const isMe=me&&me.id===u.id;
+  const following=DB.isFollowingUser(uid);
+  const myClubs=DB.getClubs().filter(c=>c.members.some(m=>m.id===uid));
+  const myNews=DB.getNews().filter(n=>n.authorId===uid);
+  document.getElementById('main').innerHTML=`
+    <div class="user-profile-header">
+      <div class="user-profile-avatar">${u.avatar||u.username.charAt(0)}</div>
+      <div style="flex:1">
+        <div class="user-profile-name">${App.esc(u.username)} ${isMe?'<span class="profile-badge">YOU</span>':''}</div>
+        <div class="user-profile-bio">${App.esc(u.bio||'This user prefers mystery.')}</div>
+        <div class="user-profile-stats">
+          <div class="user-profile-stat"><strong>${myClubs.length}</strong>Clubs</div>
+          <div class="user-profile-stat"><strong>${myNews.length}</strong>News</div>
+          <div class="user-profile-stat"><strong>${DB.getFollowers(uid).length}</strong>Followers</div>
+        </div>
+      </div>
+      ${!isMe&&me?`<button class="btn ${following?'btn-outline':'btn-primary'}" id="followBtn">${following?'Following':'Follow'}</button>`:''}
+    </div>
+
+    <h3 style="font-family:Georgia,serif;font-size:24px;margin-bottom:16px">Clubs</h3>
+    <div class="club-grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr));margin-bottom:40px">
+      ${myClubs.map(c=>`<div class="club-card tap" onclick="location.href='club-detail.html?id=${c.id}'" style="padding:20px">
+        <div class="club-icon" style="width:44px;height:44px;font-size:18px">${c.icon}</div>
+        <div class="club-name" style="font-size:17px">${App.esc(c.name)}</div>
+      </div>`).join('')||'<p style="color:var(--text-mute)">No public clubs.</p>'}
+    </div>
+
+    <h3 style="font-family:Georgia,serif;font-size:24px;margin-bottom:16px">Published News</h3>
+    ${myNews.map(n=>`<div class="news-card tap" onclick="location.href='news-detail.html?id=${n.id}'" style="margin-bottom:16px">
+      <div class="thumb">${Icons.megaphone}</div>
+      <div class="body"><div><div class="cat">${App.esc(n.topic)}</div><div class="title">${App.esc(n.title)}</div></div>
+      <div class="meta"><span>${n.views} views</span><span>${n.likes} likes</span></div></div>
+    </div>`).join('')||'<p style="color:var(--text-mute)">No news.</p>'}
+  `;
+  const fb=document.getElementById('followBtn');
+  if(fb)fb.onclick=()=>{
+    const r=DB.toggleFollowUser(uid);
+    fb.classList.toggle('btn-primary');fb.classList.toggle('btn-outline');
+    fb.textContent=r.following?'Following':'Follow';
+  };
+}
+</script>
+</body></html>

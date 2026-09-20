@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Search · AIP-Campus</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+.search-page{max-width:800px;margin:0 auto;padding:40px 20px}
+.search-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:24px 0}
+.search-tabs button{padding:8px 20px;border-radius:100px;border:1.5px solid var(--line);background:none;cursor:pointer;font-size:13px;color:var(--text)}
+.search-tabs button.active{background:var(--forest-deep);color:#fff;border-color:var(--forest-deep)}
+.result-item{padding:16px;border:1px solid var(--line);border-radius:8px;margin-bottom:12px;cursor:pointer;transition:border-color 0.2s}
+.result-item:hover{border-color:var(--moss)}
+.result-type{font-size:10px;letter-spacing:0.15em;color:var(--moss);font-weight:600}
+.result-title{font-size:16px;font-weight:600;margin:4px 0}
+.result-sub{font-size:13px;color:var(--text-mute)}
+</style>
+</head>
+<body>
+<div class="content-layer">
+<nav class="navbar">
+  <a href="../index.html" class="navbar-brand" id="brandArea">
+    <svg class="logo-svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="20" y="26" text-anchor="middle" font-family="Georgia,serif" font-size="18" font-weight="700" fill="currentColor">A</text></svg>
+    <div><div class="name">AIP-Campus</div><div class="sub">SEARCH</div></div>
+  </a>
+  <div class="navbar-links">
+    <a href="index.html">Home</a>
+    <a href="about.html">About</a>
+    <a href="clubs.html">Clubs</a>
+    <a href="news.html">News</a>
+    <a href="forum.html">Forum</a>
+  </div>
+  <div class="navbar-right"></div>
+</nav>
+
+<div class="search-page">
+  <h1 style="font-family:Georgia,serif;margin-bottom:8px">Search Campus</h1>
+  <p style="color:var(--text-mute);margin-bottom:24px">Find clubs, news, forums, and people.</p>
+  <input id="searchInput" placeholder="Type to search..." style="width:100%;padding:16px 20px;border:1.5px solid var(--line);border-radius:100px;font-size:16px;outline:none;background:var(--card);color:var(--text)" autofocus>
+  <div class="search-tabs" id="searchTabs">
+    <button class="active" data-type="all">All</button>
+    <button data-type="club">Clubs</button>
+    <button data-type="news">News</button>
+    <button data-type="forum">Forums</button>
+    <button data-type="user">Users</button>
+  </div>
+  <div id="results"></div>
+</div>
+</div>
+<script src="js/data.js"></script><script src="js/app.js"></script>
+<script>
+App.initNav('search');
+var type='all';
+document.querySelectorAll('#searchTabs button').forEach(b=>{
+  b.onclick=function(){
+    document.querySelectorAll('#searchTabs button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');type=b.dataset.type;run();
+  };
+});
+document.getElementById('searchInput').addEventListener('input',run);
+function run(){
+  var q=document.getElementById('searchInput').value.trim().toLowerCase();
+  var box=document.getElementById('results');
+  if(!q){box.innerHTML='<p style="color:var(--text-mute);margin-top:20px">Start typing to search...</p>';return}
+  function m(s){return (s||'').toLowerCase().includes(q)}
+  var html='';
+  if(type==='all'||type==='club'){
+    DB.getClubs().filter(c=>m(c.name)||m(c.description)).slice(0,10).forEach(c=>{
+      html+='<div class="result-item" onclick="location.href=\'club-detail.html?id='+c.id+'\'"><div class="result-type">CLUB</div><div class="result-title">'+App.esc(c.name)+'</div><div class="result-sub">'+App.esc(c.description)+'</div></div>';
+    });
+  }
+  if(type==='all'||type==='news'){
+    DB.getNews().filter(n=>m(n.title)||m(n.slogan)||m(n.authorName)).slice(0,10).forEach(n=>{
+      html+='<div class="result-item" onclick="location.href=\'news-detail.html?id='+n.id+'\'"><div class="result-type">NEWS</div><div class="result-title">'+App.esc(n.title)+'</div><div class="result-sub">'+App.esc(n.slogan)+'</div></div>';
+    });
+  }
+  if(type==='all'||type==='forum'){
+    DB.getForums().filter(f=>m(f.name)||m(f.description)).slice(0,10).forEach(f=>{
+      html+='<div class="result-item" onclick="location.href=\'forum-detail.html?id='+f.id+'\'"><div class="result-type">FORUM</div><div class="result-title">'+App.esc(f.name)+'</div><div class="result-sub">'+App.esc(f.description)+'</div></div>';
+    });
+  }
+  if(type==='all'||type==='user'){
+    DB.getUsers().filter(u=>m(u.username)||m(u.bio)).slice(0,10).forEach(u=>{
+      html+='<div class="result-item" onclick="location.href=\'user-profile.html?uid='+u.id+'\'"><div class="result-type">USER</div><div class="result-title">'+App.esc(u.username)+'</div><div class="result-sub">'+App.esc(u.bio||'')+'</div></div>';
+    });
+  }
+  box.innerHTML=html||'<p style="color:var(--text-mute);margin-top:20px">No results found.</p>';
+}
+</script>
+</body></html>

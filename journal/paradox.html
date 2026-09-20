@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paradox · AIP-Journal</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --red:#e03030;--red-bright:#ff3838;
+  --bg:#0a0a0a;--card:#141414;--text:#e8e4dc;--mute:#888;--line:#2a2a2a;--soft:#1a1a1a;
+}
+[data-theme="light"]{
+  --bg:#ffffff;--card:#fff;--text:#111;--mute:#555;--line:#e0e0e0;--soft:#f5f5f5;
+}
+body{font-family:'Georgia','Noto Serif SC',serif;background:var(--bg);color:var(--text);line-height:1.7;transition:background 0.3s,color 0.3s}
+a{color:inherit;text-decoration:none}
+
+.nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;
+  padding:16px 40px;background:var(--bg);border-bottom:1px solid var(--line)}
+.nav-brand{font-size:22px;font-weight:700;font-style:italic;color:var(--red);letter-spacing:-0.02em}
+.nav-links{display:flex;gap:28px;font-size:12px;letter-spacing:0.15em;text-transform:uppercase}
+.nav-links a{opacity:0.6;cursor:pointer;transition:opacity 0.2s}
+.nav-links a:hover,.nav-links a.active{opacity:1}
+.nav-right{display:flex;gap:12px;align-items:center}
+.theme-btn{background:none;border:1px solid var(--line);padding:6px 12px;font-size:12px;cursor:pointer;color:var(--text);font-family:inherit}
+
+/* Masthead */
+.masthead{text-align:center;padding:60px 40px 40px;border-bottom:3px double var(--line)}
+.masthead .vol{font-size:11px;letter-spacing:0.4em;color:var(--red);text-transform:uppercase;margin-bottom:12px}
+.masthead h1{font-size:clamp(48px,8vw,80px);font-style:italic;font-weight:400;line-height:1.05}
+.masthead .motto{font-family:'Noto Serif SC',serif;font-size:14px;color:var(--mute);margin-top:16px;letter-spacing:0.1em}
+
+.wrap{max-width:1100px;margin:0 auto;padding:40px}
+
+/* Featured / Lead article */
+.featured{padding:48px 0;border-bottom:1px solid var(--line)}
+.featured .badge{display:inline-block;padding:4px 12px;background:var(--red);color:#fff;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:16px}
+.featured .f-title{font-size:clamp(28px,4vw,42px);font-weight:700;line-height:1.2;margin-bottom:12px;cursor:pointer}
+.featured .f-title:hover{color:var(--red)}
+.featured .f-author{font-size:14px;color:var(--mute);margin-bottom:16px}
+.featured .f-abs{font-size:16px;color:var(--mute);line-height:1.8;max-width:700px}
+
+/* Article grid */
+.articles{display:grid;grid-template-columns:1fr 1fr;gap:40px;padding:48px 0}
+.article-card{padding-bottom:32px;border-bottom:1px solid var(--line)}
+.article-card .a-num{font-size:11px;letter-spacing:0.2em;color:var(--red);margin-bottom:8px}
+.article-card .a-title{font-size:22px;font-weight:700;line-height:1.3;margin-bottom:8px;cursor:pointer}
+.article-card .a-title:hover{color:var(--red)}
+.article-card .a-author{font-size:13px;color:var(--mute);margin-bottom:8px}
+.article-card .a-abs{font-size:14px;color:var(--mute);line-height:1.7}
+
+/* Tabs */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--line);margin-bottom:32px}
+.tab{padding:12px 24px;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;color:var(--mute);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab.active{color:var(--red);border-bottom-color:var(--red)}
+.tab:hover{color:var(--red)}
+
+/* Article full view */
+.article-full{display:none;max-width:750px;margin:0 auto;padding:40px}
+.article-full.show{display:block}
+.article-full .back-link{display:inline-flex;align-items:center;gap:8px;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:var(--red);margin-bottom:24px;cursor:pointer}
+.article-full .a-badge{display:inline-block;padding:4px 12px;background:var(--red);color:#fff;font-size:10px;letter-spacing:0.2em;margin-bottom:16px}
+.article-full h1{font-size:36px;font-weight:700;line-height:1.2;margin-bottom:8px}
+.article-full .cn-sub{font-family:'Noto Serif SC',serif;font-size:18px;color:var(--red);margin-bottom:20px}
+.article-full .byline{font-size:14px;color:var(--mute);margin-bottom:40px;padding-bottom:20px;border-bottom:1px solid var(--line)}
+.article-full .body p{margin-bottom:20px;font-size:16px;line-height:1.9}
+.article-full .body .dropcap::first-letter{font-size:56px;float:left;line-height:1;padding-right:8px;font-style:italic;color:var(--red)}
+
+/* Action bar */
+.action-bar{display:flex;gap:8px;padding:20px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:32px 0}
+.action-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;background:none;border:1px solid var(--line);font-size:13px;cursor:pointer;transition:all 0.2s;color:var(--mute)}
+.action-btn:hover,.action-btn.active{border-color:var(--red);color:var(--red)}
+
+/* Comments */
+.comment-section{margin-top:32px}
+.comment-section h3{font-size:18px;margin-bottom:16px}
+.comment-input-row{display:flex;gap:8px;margin-bottom:24px}
+.comment-input-row textarea{flex:1;padding:12px;border:1px solid var(--line);background:var(--bg);font-family:inherit;font-size:14px;min-height:60px;color:var(--text)}
+.comment-item{display:flex;gap:12px;padding:16px 0;border-bottom:1px solid var(--line)}
+.comment-avatar{width:36px;height:36px;border-radius:50%;background:var(--red);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
+.comment-body{flex:1}
+.comment-author{font-weight:700;font-size:14px}
+.comment-time{font-size:11px;color:var(--mute);margin-left:8px}
+.comment-text{font-size:14px;margin:4px 0}
+.comment-actions{display:flex;gap:12px;margin-top:4px}
+.comment-action{background:none;border:none;font-size:12px;color:var(--mute);cursor:pointer;display:flex;align-items:center;gap:4px}
+.comment-action:hover,.comment-action.liked{color:var(--red)}
+
+/* Submit */
+.submit-box{background:var(--soft);padding:40px;max-width:750px;margin:0 auto}
+.submit-box h3{font-style:italic;font-size:24px;margin-bottom:16px}
+.submit-box p{color:var(--mute);font-size:14px;margin-bottom:16px}
+
+/* Search */
+.search-box{margin-bottom:32px}
+.search-box input{width:100%;padding:14px 16px;border:1px solid var(--line);background:var(--bg);font-family:inherit;font-size:14px;color:var(--text)}
+
+footer{text-align:center;padding:40px;font-size:11px;color:var(--mute);letter-spacing:0.1em;border-top:1px solid var(--line);margin-top:60px}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <a href="../index.html" class="nav-brand">Paradox</a>
+  <div class="nav-links">
+    <a class="active" data-tab="current" onclick="switchTab('current')">Current</a>
+    <a data-tab="archive" onclick="switchTab('archive')">Archive</a>
+    <a data-tab="submit" onclick="switchTab('submit')">Submit</a>
+    <a data-tab="search" onclick="switchTab('search')">Search</a>
+  </div>
+  <div class="nav-right">
+    <button class="theme-btn" onclick="toggleTheme()">◐</button>
+  </div>
+</nav>
+
+<div class="masthead">
+  <div class="vol">Volume III · 2026</div>
+  <h1>Paradox</h1>
+  <p class="motto">论矛盾之美 · In Contradiction, Truth</p>
+</div>
+
+<div class="wrap">
+  <!-- Search -->
+  <div class="search-box" id="searchBox" style="display:none">
+    <input type="text" id="searchInput" placeholder="Search articles by title, topic, or author...">
+    <div id="searchResults" style="margin-top:16px"></div>
+  </div>
+
+  <!-- Submit -->
+  <div id="submitView" style="display:none">
+    <div class="submit-box">
+      <h3>Call for Papers · Vol. IV</h3>
+      <p><strong>Theme:</strong> "Paradox and Reason" — explore the tension between contradiction and logic.</p>
+      <p><strong>Deadline:</strong> October 15, 2026</p>
+      <p><strong>Length:</strong> 2,000–5,000 words</p>
+      <p><strong>Email:</strong> paradox@aip.edu.cn</p>
+      <button class="theme-btn" style="color:var(--red);border-color:var(--red);margin-top:16px" onclick="alert('Submission portal opening soon.')">Submit a Paper →</button>
+    </div>
+  </div>
+
+  <!-- Article list view -->
+  <div id="listView">
+    <!-- Featured lead article -->
+    <div class="featured" id="featuredSection"></div>
+    <!-- Remaining articles -->
+    <div class="articles" id="articleGrid"></div>
+  </div>
+
+  <!-- Full article -->
+  <div id="fullView" class="article-full"></div>
+</div>
+
+<footer>PARADOX · VOL III · 2026 · DR. D · AIP-JOURNAL · <a href="../index.html" style="text-decoration:underline">A-Web</a></footer>
+
+<script>
+const ARTICLES=[
+  {id:'a1',vol:'Vol. III · 2026',title:'The Wine Debate',cn:'红酒之辩',author:'Dr. D',featured:true,abs:'An inquiry into the paradox of pleasure and virtue in the culture of wine — how sipping, so often dismissed as indulgence, becomes a meditation on time, terroir, and human finitude.',
+   body:[
+    'Wine is the most paradoxical of pleasures. It is at once the most refined and the most visceral; a product of civilization and a pure fermentation of fruit. To drink wine is to sit at the intersection of culture and nature, and to feel the tension between them.',
+    'The ancient Greeks called it "the gift of Dionysus" — a force that unites ecstasy and reason. Nietzsche would later argue that this very tension was the source of all great art. The wine debate, then, is not about whether wine is good or bad, but about how we live with contradiction.',
+    'Consider the paradox: the more carefully we cultivate a vineyard, the more we intervene in nature, the more "natural" the wine tastes. The terroir that we prize is itself the product of centuries of human shaping. There is no wilderness left in a great vineyard — only a collaboration so perfected that it appears spontaneous.',
+    'This is the paradox of all human pleasures: the more we pursue them deliberately, the more they elude us. We search for "natural" wine in an age when nothing is natural. We seek authenticity in a world of industrial production. The wine debate, properly understood, is a mirror held up to modernity itself.',
+    'Dr. D. is a scholar of comparative literature and philosophy. His work explores the intersection of aesthetic experience and ethical judgment.',
+   ]},
+  {id:'a2',vol:'Vol. III · 2026',title:'The Era of the Compound Economy',cn:'复合型经济体的时代使命',author:'Dr. D',featured:false,abs:'As the global economy fragments into competing blocs and hybrid models, what is the mission of the compound economy?',
+   body:[
+    'The twentieth century offered a choice between two poles: the planned economy and the free market. The twenty-first century has dissolved that choice. The economies that will define our time are compound structures — state, market, and society operating in layered, often contradictory ways.',
+    'A compound economy is not a mixture. It is a structure of tensions. The state sets direction; the market discovers the path; society supplies legitimacy. When these three are in balance, the economy is resilient. When one dominates, the system becomes brittle.',
+    'The paradox at the heart of the compound economy is this: central planning cannot substitute for discovery, and markets cannot substitute for legitimacy. The mission of our era is not to choose one, but to design institutions that hold the three in productive tension.',
+   ]},
+  {id:'a3',vol:'Vol. II · 2025',title:'On Remembering the World When It Was Young',cn:'论忆世界年轻时之思',author:'Dr. D',featured:false,abs:'A meditation on memory, childhood, and the strange feeling that the world once made more sense.',
+   body:[
+    'We remember the world when it was young not as it was, but as we were. The child sees a world freshly minted, every object charged with possibility. By adulthood, the world has become familiar — and familiarity, which should be a comfort, often feels like a loss.',
+    'This essay is not a nostalgic lament. It is an attempt to understand why we feel the world was more vivid when we were young. Is it that the world has changed, or that we have changed?',
+    'To remember the world when it was young is not to return to childhood. It is to recover the capacity for astonishment that childhood supplies in abundance and adulthood wages war against.',
+   ]},
+  {id:'a4',vol:'Vol. II · 2025',title:'On the Chemical Properties of the Bloom on Blueberries',cn:'蓝莓表面的化学物质的特性',author:'Dr. D',featured:false,abs:'The "bloom" on blueberries — a case study in how the smallest natural structures carry the most complex chemistry.',
+   body:[
+    'Look closely at a blueberry. There, on its skin, is a faint silvery film — the bloom. It is not dirt. It is a complex biological structure: a mixture of waxes, triterpenoids, and secondary metabolites that the berry produces to protect itself.',
+    'The chemistry of the bloom is remarkable. It contains oleanolic acid and ursolic acid — compounds of pharmaceutical interest. The substance consumers routinely discard may be the most pharmacologically active part of the berry.',
+    'This is a small illustration of a larger paradox: the features of the natural world we most often overlook are often the ones carrying the greatest structural complexity.',
+   ]},
+];
+
+const LIKES_KEY='paradox_likes_v3';
+const COMMENTS_KEY='paradox_comments_v3';
+
+function getLikes(){try{return JSON.parse(localStorage.getItem(LIKES_KEY))||{}}catch(e){return{}}}
+function setLikes(v){localStorage.setItem(LIKES_KEY,JSON.stringify(v))}
+function getComments(){try{return JSON.parse(localStorage.getItem(COMMENTS_KEY))||{}}catch(e){return{}}}
+function setComments(v){localStorage.setItem(COMMENTS_KEY,JSON.stringify(v))}
+
+function renderFeatured(){
+  const f=ARTICLES.find(a=>a.featured)||ARTICLES[0];
+  const likes=getLikes();
+  const cnt=likes[f.id]||0;
+  const liked=likedSet().includes(f.id);
+  document.getElementById('featuredSection').innerHTML=`
+    <span class="badge">Lead Article</span>
+    <div class="f-title" onclick="openArticle('${f.id}')">${f.title}</div>
+    <div class="f-author">By ${f.author} · ${f.vol}</div>
+    <div class="f-abs">${f.abs}</div>
+    <div style="margin-top:16px;display:flex;gap:8px">
+      <button class="action-btn ${liked?'active':''}" onclick="toggleLike('${f.id}')">♥ <span>${cnt}</span></button>
+    </div>`;
+}
+function renderGrid(){
+  const others=ARTICLES.filter(a=>!a.featured);
+  document.getElementById('articleGrid').innerHTML=others.map(a=>`
+    <div class="article-card">
+      <div class="a-num">${a.vol}</div>
+      <div class="a-title" onclick="openArticle('${a.id}')">${a.title}</div>
+      <div class="a-author">By ${a.author}</div>
+      <div class="a-abs">${a.abs}</div>
+    </div>`).join('');
+}
+renderFeatured();renderGrid();
+
+function likedSet(){return JSON.parse(localStorage.getItem(LIKES_KEY+'_set')||'[]')}
+function toggleLike(id){
+  let likes=getLikes();let set=likedSet();
+  if(set.includes(id)){set=set.filter(x=>x!==id);likes[id]=Math.max(0,(likes[id]||1)-1)}
+  else{set.push(id);likes[id]=(likes[id]||0)+1}
+  setLikes(likes);localStorage.setItem(LIKES_KEY+'_set',JSON.stringify(set));
+  renderFeatured();
+}
+
+function openArticle(id){
+  const a=ARTICLES.find(x=>x.id===id);
+  document.getElementById('listView').style.display='none';
+  document.getElementById('submitView').style.display='none';
+  document.getElementById('searchBox').style.display='none';
+  const v=document.getElementById('fullView');
+  v.classList.add('show');
+  const comments=getComments();
+  const ac=comments[id]||[];
+  v.innerHTML=`
+    <span class="back-link" onclick="closeArticle()">← All Articles</span>
+    ${a.featured?'<span class="a-badge">Lead Article</span>':''}
+    <h1>${a.title}</h1>
+    <div class="cn-sub">${a.cn}</div>
+    <div class="byline">By ${a.author} · ${a.vol}</div>
+    <div class="body">
+      ${a.body.map((p,i)=>`<p class="${i===0?'dropcap':''}">${p}</p>`).join('')}
+    </div>
+    <div class="action-bar">
+      <button class="action-btn" onclick="toggleLike('${a.id}')">♥ Like</button>
+      <button class="action-btn" onclick="document.getElementById('commentBox').scrollIntoView()">💬 Comment</button>
+    </div>
+    <div class="comment-section" id="commentBox">
+      <h3>Comments (${ac.length})</h3>
+      <div class="comment-input-row">
+        <textarea id="cInput" placeholder="Add a comment..."></textarea>
+        <button class="theme-btn" style="border-color:var(--red);color:var(--red)" onclick="postComment('${a.id}')">Post</button>
+      </div>
+      <div id="commentList">
+        ${ac.map((c,i)=>`<div class="comment-item">
+          <div class="comment-avatar">${c.name.charAt(0).toUpperCase()}</div>
+          <div class="comment-body">
+            <span class="comment-author">${c.name}</span>
+            <span class="comment-time">${c.time}</span>
+            <div class="comment-text">${c.text}</div>
+            <div class="comment-actions">
+              <button class="comment-action" onclick="likeComment('${a.id}',${i})">♥ ${c.likes||0}</button>
+            </div>
+          </div>
+        </div>`).join('')||'<p style="color:var(--mute);font-size:14px">No comments yet. Be the first.</p>'}
+      </div>
+    </div>`;
+  window.scrollTo(0,0);
+}
+function closeArticle(){
+  document.getElementById('fullView').classList.remove('show');
+  document.getElementById('listView').style.display='block';
+}
+function postComment(aid){
+  const v=document.getElementById('cInput').value.trim();
+  if(!v)return;
+  const comments=getComments();
+  comments[aid]=comments[aid]||[];
+  comments[aid].unshift({name:'Reader',text:v,time:new Date().toLocaleDateString(),likes:0});
+  setComments(comments);
+  openArticle(aid);
+}
+function likeComment(aid,idx){
+  const comments=getComments();
+  comments[aid][idx].likes=(comments[aid][idx].likes||0)+1;
+  setComments(comments);
+  openArticle(aid);
+}
+
+function switchTab(t){
+  document.querySelectorAll('.nav-links a').forEach(x=>x.classList.toggle('active',x.dataset.tab===t));
+  closeArticle();
+  if(t==='search'){document.getElementById('searchBox').style.display='block';document.getElementById('listView').style.display='none';document.getElementById('submitView').style.display='none'}
+  else if(t==='submit'){document.getElementById('searchBox').style.display='none';document.getElementById('listView').style.display='none';document.getElementById('submitView').style.display='block'}
+  else{document.getElementById('searchBox').style.display='none';document.getElementById('listView').style.display='block';document.getElementById('submitView').style.display='none'}
+}
+document.getElementById('searchInput').addEventListener('input',e=>{
+  const q=e.target.value.toLowerCase();
+  if(!q){document.getElementById('searchResults').innerHTML='';return}
+  const r=ARTICLES.filter(a=>a.title.toLowerCase().includes(q)||a.cn.includes(q)||a.abs.toLowerCase().includes(q));
+  document.getElementById('searchResults').innerHTML=r.map(a=>`<div style="padding:16px 0;border-bottom:1px solid var(--line);cursor:pointer" onclick="openArticle('${a.id}')"><strong>${a.title}</strong><div style="color:var(--mute);font-size:13px">${a.cn}</div></div>`).join('')||'<p style="color:var(--mute)">No results.</p>';
+});
+function toggleTheme(){
+  const d=document.documentElement;
+  if(d.getAttribute('data-theme')==='light'){d.removeAttribute('data-theme');localStorage.setItem('paradox_theme','dark')}
+  else{d.setAttribute('data-theme','light');localStorage.setItem('paradox_theme','light')}
+}
+if(localStorage.getItem('paradox_theme')==='light')document.documentElement.setAttribute('data-theme','light');
+</script>
+</body></html>

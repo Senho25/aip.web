@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIP-Station</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter','Noto Sans SC',sans-serif;background:#fff7f0;color:#3d1f0a;min-height:100vh;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+
+/* paint blobs */
+.blob{position:absolute;border-radius:50%;filter:blur(60px);opacity:0.4;pointer-events:none}
+.blob1{width:500px;height:500px;background:#ff8c42;top:-10%;right:-10%}
+.blob2{width:400px;height:400px;background:#ffd166;bottom:-5%;left:-5%}
+.blob3{width:300px;height:300px;background:#ef476f;top:40%;left:30%;opacity:0.25}
+
+.wrap{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;text-align:center}
+
+/* rainbow ring logo */
+.ring{width:120px;height:120px;border-radius:50%;padding:5px;
+  background:conic-gradient(#ef476f,#ffd166,#06d6a0,#118ab2,#7b2cbf,#ef476f);
+  animation:spin 15s linear infinite;margin-bottom:40px;box-shadow:0 20px 60px rgba(239,71,111,0.3)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ring-inner{width:100%;height:100%;border-radius:50%;background:#fff7f0;display:flex;align-items:center;justify-content:center}
+.ring-inner svg{width:48px;height:48px;stroke:#e8621a;stroke-width:1.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
+
+h1{font-size:clamp(48px,10vw,96px);font-weight:800;letter-spacing:-0.03em;line-height:1;margin-bottom:8px}
+h1 .accent{color:#e8621a}
+.sub-en{font-size:14px;letter-spacing:0.3em;text-transform:uppercase;color:#e8621a;margin-bottom:24px}
+.tagline{font-size:clamp(18px,3vw,24px);color:#7a4a2a;max-width:600px;line-height:1.6;margin-bottom:48px}
+.cn{font-family:'Noto Serif SC',serif;font-style:italic;color:#c0653a;margin-top:8px}
+
+.badge{display:inline-block;padding:12px 32px;background:#e8621a;color:#fff;font-size:13px;letter-spacing:0.2em;text-transform:uppercase;
+  border-radius:100px;margin-bottom:40px;box-shadow:0 8px 24px rgba(232,98,26,0.3)}
+
+.back{position:absolute;top:32px;left:40px;font-size:13px;letter-spacing:0.1em;opacity:0.7;transition:opacity 0.2s;z-index:100;cursor:pointer}
+.back:hover{opacity:1}
+
+/* water drop decorations */
+.drop{position:absolute;border-radius:50% 50% 50% 0;transform:rotate(-45deg);opacity:0.15;pointer-events:none}
+.d1{width:80px;height:80px;background:#ff8c42;top:20%;left:10%}
+.d2{width:50px;height:50px;background:#ef476f;bottom:15%;right:15%}
+.d3{width:30px;height:30px;background:#ffd166;top:60%;right:8%}
+
+.footer{position:absolute;bottom:20px;left:0;right:0;text-align:center;font-size:11px;opacity:0.4}
+</style>
+</head>
+<body>
+<div class="blob blob1"></div>
+<div class="blob blob2"></div>
+<div class="blob blob3"></div>
+<div class="drop d1"></div>
+<div class="drop d2"></div>
+<div class="drop d3"></div>
+
+<a href="../index.html" class="back">← A-Web</a>
+
+<div class="wrap">
+  <div class="ring"><div class="ring-inner">
+    <svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/><circle cx="12" cy="12" r="3"/></svg>
+  </div></div>
+
+  <div class="sub-en">AIP · Campus Radio</div>
+  <h1>AIP-<span class="accent">Station</span></h1>
+  <p class="tagline">Sound waves, voices, and everything in between.<br>
+  <span class="cn">声波所至，即校园之声。</span></p>
+
+  <div class="badge">Coming Soon · 敬请期待</div>
+</div>
+
+<div class="footer">© 2026 AIP-Station · A-Web 1.0.0</div>
+</body>
+</html>

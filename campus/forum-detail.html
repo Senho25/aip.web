@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forum · AIP-Campus</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="content-layer">
+<nav class="navbar">
+  <a href="../index.html" class="navbar-brand" id="brandArea">
+    <svg class="logo-svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="20" y="26" text-anchor="middle" font-family="Georgia,serif" font-size="18" font-weight="700" fill="currentColor">A</text></svg>
+    <div><div class="name">AIP-Campus</div><div class="sub">SHEN WAI · INTERNATIONAL ACADEMY</div></div>
+  </a>
+  <div class="navbar-links">
+    <a href="index.html" data-page="home">Home</a>
+    <a href="about.html" data-page="about">About</a>
+    <a href="clubs.html" data-page="clubs">Clubs</a>
+    <a href="news.html" data-page="news">News</a>
+    <a href="forum.html" data-page="forum" class="active">Forum</a>
+  </div>
+  <div class="navbar-right"></div>
+</nav>
+
+<div class="container" id="main"></div>
+<footer class="site-footer">© 2026 AIP-Campus · <a href="../index.html" style="text-decoration:underline">AIP-Web Home</a></footer>
+</div>
+
+<script src="js/data.js"></script><script src="js/app.js"></script>
+<script>
+App.initNav('forum');
+const fid=App.getParam('id');
+const f=DB.getForum(fid);
+const user=DB.getCurrentUser();
+let attachedImages=[],attachedFiles=[];
+
+if(!f){
+  document.getElementById('main').innerHTML='<div class="empty-state"><div class="text">Forum not found.</div></div>';
+}else{
+  document.getElementById('main').innerHTML=`
+    <div class="detail-header">
+      <div style="display:flex;align-items:center;gap:20px">
+        <div class="forum-bar-photo" style="width:64px;height:64px">${f.name.charAt(0)}</div>
+        <div>
+          <div class="detail-category">Forum</div>
+          <h1 class="detail-title" style="font-size:36px;margin:0">${App.esc(f.name)}</h1>
+          <div class="detail-meta" style="margin-top:8px">${f.tags.map(t=>`<span class="forum-tag">${t}</span>`).join('')} ${f.anonymous?'<span class="forum-tag">Anonymous allowed</span>':''}</div>
+        </div>
+      </div>
+      <p style="margin-top:16px;color:var(--text-soft)">${App.esc(f.description)}</p>
+    </div>
+
+    ${user?`
+    <div class="composer" id="composer">
+      <div class="composer-toolbar">
+        <button onclick="document.getElementById('imgInput').click()" title="Image">${Icons.image}</button>
+        <button onclick="document.getElementById('fileInput').click()" title="File">${Icons.file}</button>
+        <button onclick="insertAt()" title="Mention">${Icons.at}</button>
+        <span class="composer-status" id="anonHint">${f.anonymous?'Anonymous posting allowed':'Logged in as '+user.username}</span>
+      </div>
+      <textarea id="postContent" placeholder="Share your thoughts..."></textarea>
+      <input type="file" id="imgInput" accept="image/*" multiple style="display:none">
+      <input type="file" id="fileInput" multiple style="display:none">
+      <div id="attachedBar" style="padding:8px 16px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:6px"></div>
+      <div class="composer-footer">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-mute)">
+          <input type="checkbox" id="anonCheck" ${f.anonymous?'':'disabled'}> Post anonymously
+        </label>
+        <button class="btn btn-primary btn-sm" onclick="submitPost()">Post ${Icons.send}</button>
+      </div>
+    </div>`:'<div class="empty-state" style="margin-bottom:24px"><a href="login.html" class="btn btn-outline">Sign in to post</a></div>'}
+
+    <div id="postList"></div>
+  `;
+
+  if(user){
+    document.getElementById('imgInput').addEventListener('change',async e=>{
+      const file=e.target.files[0];if(!file)return;
+      const b64=await App.fileToBase64(file);
+      App.insertImageAtCursor(document.getElementById('postContent'),b64);
+      e.target.value='';
+    });
+    document.getElementById('fileInput').addEventListener('change',e=>{
+      for(const file of e.target.files)attachedFiles.push(file.name);
+      renderAttached();
+    });
+  }
+}
+function renderAttached(){
+  const bar=document.getElementById('attachedBar');
+  let html='';
+  attachedImages.forEach((img,i)=>html+=`<span class="attachment-chip" onclick="attachedImages.splice(${i},1);renderAttached()">${Icons.image} Image ${i+1} 脳</span>`);
+  attachedFiles.forEach((fn,i)=>html+=`<span class="attachment-chip" onclick="attachedFiles.splice(${i},1);renderAttached()">${Icons.file} ${fn} 脳</span>`);
+  bar.innerHTML=html;
+}
+function insertAt(){
+  const ta=document.getElementById('postContent');
+  ta.value+='@';ta.focus();
+}
+function submitPost(){
+  const content=document.getElementById('postContent').value.trim();
+  if(!content){DB.toast('Write something first');return}
+  DB.addForumPost(fid,content,attachedImages,attachedFiles);
+  attachedImages=[];attachedFiles=[];
+  DB.toast('Posted');setTimeout(()=>location.reload(),500);
+}
+function renderPosts(){
+  const f=DB.getForum(fid);
+  document.getElementById('postList').innerHTML=f.posts.map(p=>{
+    const liked=DB.isPostLiked(fid,p.id);
+    return `<div class="post-item">
+      <div class="post-avatar" onclick="location.href='user-profile.html?uid=${p.authorId}'">${p.authorAvatar}</div>
+      <div class="post-body">
+        <div class="post-header">
+          <span class="post-author" onclick="location.href='user-profile.html?uid=${p.authorId}'">${App.esc(p.authorName)}</span>
+          <span class="post-time">${DB.timeAgo(p.createdAt)}</span>
+          <div class="post-menu">
+            <button class="post-menu-btn" onclick="toggleMenu('${p.id}')">${Icons.more}</button>
+            <div class="post-menu-dropdown" id="menu_${p.id}">
+              <button onclick="toggleLikePost('${p.id}')">${Icons.heart} ${liked?'Unlike':'Like'}</button>
+              <button onclick="DB.toast('Link copied')">Copy Link</button>
+              ${DB.canRecall(p)?`<button class="danger" onclick="recallPost('${p.id}')">${Icons.undo} Recall</button>`:''}
+              <button class="danger" onclick="DB.toast('Report submitted (demo)')">${Icons.flag} Report</button>
+            </div>
+          </div>
+        </div>
+        <div class="post-content ${p.recalled?'post-recalled':''}">${p.recalled?App.esc(p.content):App.renderContent(p.content)}</div>
+        ${p.images&&p.images.length?`<div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0">${p.images.map(im=>`<img src="${im}" style="max-width:280px;max-height:200px;object-fit:cover;cursor:pointer">`).join('')}</div>`:''}
+        ${p.files&&p.files.length?`<div>${p.files.map(fn=>`<span class="post-file">${Icons.file} ${fn}</span>`).join('')}</div>`:''}
+        <div class="post-actions">
+          <button class="post-action ${liked?'liked':''}" onclick="toggleLikePost('${p.id}')">${Icons.heart}<span>${p.likes}</span></button>
+          <button class="post-action" onclick="document.getElementById('replyBox_${p.id}').style.display=document.getElementById('replyBox_${p.id}').style.display==='none'?'block':'none'">${Icons.reply} Reply</button>
+        </div>
+        <div id="replyBox_${p.id}" style="display:none;margin-top:12px">
+          <div class="comment-input-row">
+            <textarea placeholder="Write a reply..." id="replyInput_${p.id}"></textarea>
+            <button class="btn btn-primary btn-sm" onclick="submitComment('${p.id}')">Send</button>
+          </div>
+        </div>
+        <div id="commentList_${p.id}">
+          ${(p.comments||[]).map(c=>`
+            <div class="comment-item">
+              <div class="comment-avatar" onclick="location.href='user-profile.html?uid=${c.authorId}'">${c.authorAvatar}</div>
+              <div class="comment-body">
+                <span class="comment-author" onclick="location.href='user-profile.html?uid=${c.authorId}'" style="cursor:pointer">${App.esc(c.authorName)}</span>
+                <span class="comment-time">${DB.timeAgo(c.createdAt)}</span>
+                <div class="comment-text">${App.renderContent(c.content)}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+if(f)renderPosts();
+function toggleMenu(pid){
+  document.querySelectorAll('.post-menu-dropdown').forEach(d=>{if(d.id!=='menu_'+pid)d.classList.remove('show')});
+  document.getElementById('menu_'+pid).classList.toggle('show');
+}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.post-menu'))document.querySelectorAll('.post-menu-dropdown').forEach(d=>d.classList.remove('show'));
+});
+function toggleLikePost(pid){
+  if(!DB.getCurrentUser()){location.href='login.html';return}
+  DB.togglePostLike(fid,pid);renderPosts();
+}
+function submitComment(pid){
+  const v=document.getElementById('replyInput_'+pid).value.trim();
+  if(!v)return;
+  DB.addPostComment(fid,pid,v);
+  DB.toast('Reply posted');renderPosts();
+}
+function recallPost(pid){
+  const r=DB.recallPost(fid,pid);
+  DB.toast(r.msg||'Recalled');if(r.ok)setTimeout(()=>renderPosts(),500);
+}
+</script>
+</body></html>

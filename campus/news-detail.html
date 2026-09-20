@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>News · AIP-Campus</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="content-layer">
+<nav class="navbar">
+  <a href="../index.html" class="navbar-brand" id="brandArea">
+    <svg class="logo-svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="20" y="26" text-anchor="middle" font-family="Georgia,serif" font-size="18" font-weight="700" fill="currentColor">A</text></svg>
+    <div><div class="name">AIP-Campus</div><div class="sub">CAMPUS · COMMUNITY · CONVERSATION</div></div>
+  </a>
+  <div class="navbar-links">
+    <a href="index.html" data-page="home">Home</a>
+    <a href="about.html" data-page="about">About</a>
+    <a href="clubs.html" data-page="clubs">Clubs</a>
+    <a href="news.html" data-page="news" class="active">News</a>
+    <a href="forum.html" data-page="forum">Forum</a>
+  </div>
+  <div class="navbar-right"></div>
+</nav>
+
+<div class="container-narrow" id="main"></div>
+<footer class="site-footer">© 2026 AIP-Campus · <a href="../index.html" style="text-decoration:underline">AIP-Web Home</a></footer>
+</div>
+
+<script src="js/data.js"></script><script src="js/app.js"></script>
+<script>
+App.initNav('news');
+const nid=App.getParam('id');
+const n=DB.getNewsById(nid);
+const user=DB.getCurrentUser();
+if(!n){
+  document.getElementById('main').innerHTML='<div class="empty-state"><div class="text">News not found.</div></div>';
+}else{
+  DB.incrementViews(nid);
+  const liked=DB.isNewsLiked(nid);
+  const saved=DB.isNewsSaved(nid);
+  document.getElementById('main').innerHTML=`
+    <div class="detail-header">
+      <div class="detail-category">${App.esc(n.topic||'Announcement')}</div>
+      <h1 class="detail-title">${App.esc(n.title)}</h1>
+      <div class="detail-meta">
+        <span>By <a href="${n.authorType==='club'?'club-detail.html?id='+n.authorId:'user-profile.html?uid='+n.authorId}" style="color:var(--moss);font-weight:600">${App.esc(n.authorName)}</a></span>
+        <span>${DB.formatDate(n.createdAt)}</span>
+        <span>${n.views+1} views</span>
+      </div>
+    </div>
+    <div class="detail-content">${App.renderContent(n.content)}</div>
+    ${(n.attachments||[]).map(a=>a.mode==='inline'
+      ?'<div style="margin:24px 0;border:1px solid var(--line);border-radius:8px;overflow:hidden"><div style="padding:8px 16px;background:var(--mist);font-size:13px">📄 '+App.esc(a.name)+'</div><embed src="'+a.data+'" type="application/pdf" style="width:100%;height:600px;border:none"></div>'
+      :'<div style="margin:16px 0;padding:12px 16px;border:1px dashed var(--line);border-radius:6px"><a href="'+a.data+'" download="'+App.esc(a.name)+'" style="color:var(--moss)">📎 '+App.esc(a.name)+' (download)</a></div>'
+    ).join('')}
+    <div class="action-bar">
+      <button class="action-btn ${liked?'active':''}" onclick="toggleLike(this)">${Icons.heart}<span id="likeCnt">${n.likes}</span></button>
+      <button class="action-btn ${saved?'active':''}" onclick="toggleSave(this)">${Icons.bookmark} ${saved?'Saved':'Save'}</button>
+    </div>
+    <h3 style="font-family:Georgia,serif;margin-bottom:16px">Comments (${n.comments.length})</h3>
+    <div class="comment-input-box">
+      <textarea id="commentInput" placeholder="${user?'Add a comment...':'Sign in to comment...'}" ${user?'':'disabled'}></textarea>
+      <button class="btn btn-primary" onclick="postComment()" ${user?'':'disabled'}>Post</button>
+    </div>
+    <div id="commentList">
+      ${n.comments.map(c=>{
+        const cLiked=DB.isNewsCommentLiked(nid,c.id);
+        return `<div class="comment-item">
+          <div class="comment-avatar">${c.authorAvatar}</div>
+          <div class="comment-body">
+            <span class="comment-author">${App.esc(c.authorName)}</span>
+            <span class="comment-time">${DB.timeAgo(c.createdAt)}</span>
+            <div class="comment-text">${App.renderContent(c.content)}</div>
+            <div class="comment-actions">
+              <button class="comment-action ${cLiked?'liked':''}" onclick="toggleCommentLike('${c.id}')">${Icons.heart} ${c.likes||0}</button>
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+function toggleLike(btn){
+  if(!DB.getCurrentUser()){location.href='login.html';return}
+  const r=DB.toggleNewsLike(nid);
+  if(r.ok){btn.classList.toggle('active');document.getElementById('likeCnt').textContent=parseInt(document.getElementById('likeCnt').textContent)+(btn.classList.contains('active')?1:-1)}
+}
+function toggleSave(btn){
+  if(!DB.getCurrentUser()){location.href='login.html';return}
+  const r=DB.toggleNewsSave(nid);
+  if(r.ok){btn.classList.toggle('active');btn.innerHTML=Icons.bookmark+(btn.classList.contains('active')?' Saved':' Save')}
+}
+function toggleCommentLike(cid){
+  if(!DB.getCurrentUser()){location.href='login.html';return}
+  DB.toggleNewsCommentLike(nid,cid);
+  location.reload();
+}
+function postComment(){
+  const v=document.getElementById('commentInput').value.trim();
+  if(!v)return;
+  DB.addNewsComment(nid,v);
+  DB.toast('Comment posted');setTimeout(()=>location.reload(),500);
+}
+</script>
+</body></html>

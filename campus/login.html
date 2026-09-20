@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign In · AIP-Campus</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+.auth-container{min-height:calc(100vh - 80px);display:flex;align-items:center;justify-content:center;padding:40px 20px}
+.auth-card{width:100%;max-width:420px;background:var(--card);border:1px solid var(--line);padding:48px 40px}
+.auth-title{font-family:Georgia,serif;font-size:32px;font-weight:700;font-style:italic;margin-bottom:4px}
+.auth-subtitle{font-family:'Noto Serif SC',serif;font-size:13px;color:var(--text-mute);margin-bottom:32px;letter-spacing:0.1em}
+.auth-tabs{display:flex;border-bottom:1px solid var(--line);margin-bottom:28px}
+.auth-tab{flex:1;text-align:center;padding:12px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-mute);border-bottom:2px solid transparent;transition:all 0.2s}
+.auth-tab.active{color:var(--moss);border-bottom-color:var(--moss)}
+.form-group{margin-bottom:20px}
+.form-label{display:block;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-mute);margin-bottom:6px}
+.form-group input{width:100%;padding:12px 14px;border:1px solid var(--line);background:var(--bg);font-family:inherit;font-size:15px;color:var(--text);outline:none;transition:border-color 0.2s}
+.form-group input:focus{border-color:var(--moss)}
+.required{color:var(--red,#e03030)}
+</style>
+</head>
+<body>
+<div class="content-layer">
+<nav class="navbar" id="mainNav">
+  <a href="../index.html" class="navbar-brand" id="brandArea">
+    <svg class="logo-svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="20" y="26" text-anchor="middle" font-family="Georgia,serif" font-size="18" font-weight="700" fill="currentColor">A</text></svg>
+    <div><div class="name">AIP-Campus</div><div class="sub">CAMPUS · COMMUNITY · CONVERSATION</div></div>
+  </a>
+  <div class="navbar-right"></div>
+</nav>
+
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="auth-title">Welcome</div>
+    <p class="auth-subtitle">自由栖于旷野，灵魂归于沧溟</p>
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Sign In</div>
+      <div class="auth-tab" id="tabReg" onclick="switchTab('reg')">Register</div>
+    </div>
+
+    <div id="loginForm">
+      <div class="form-group"><label class="form-label">Username</label><input id="liUser" placeholder="your username" autocomplete="username"></div>
+      <div class="form-group"><label class="form-label">Password</label><input type="password" id="liPass" placeholder="Your password" autocomplete="current-password"></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="doLogin()">Sign In</button>
+      <p style="font-size:12px;color:var(--text-mute);margin-top:16px">Test account: <strong>ChenHaoran</strong> / <strong>123456</strong></p>
+    </div>
+
+    <div id="regForm" style="display:none">
+      <div class="form-group"><label class="form-label">Username <span class="required">*</span></label><input id="rgUser" placeholder="Choose a username" autocomplete="username"></div>
+      <div class="form-group"><label class="form-label">Email <span class="required">*</span></label><input type="email" id="rgEmail" placeholder="you@example.com" autocomplete="email"></div>
+      <div class="form-group"><label class="form-label">Password <span class="required">*</span></label><input type="password" id="rgPass" placeholder="Choose a password" autocomplete="new-password"></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="doReg()">Create Account</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<script src="js/data.js"></script><script src="js/app.js"></script>
+<script>
+App.initNav('');
+function switchTab(t){
+  document.getElementById('tabLogin').classList.toggle('active',t==='login');
+  document.getElementById('tabReg').classList.toggle('active',t==='reg');
+  document.getElementById('loginForm').style.display=t==='login'?'block':'none';
+  document.getElementById('regForm').style.display=t==='reg'?'block':'none';
+}
+function doLogin(){
+  var u=document.getElementById('liUser').value.trim();
+  var p=document.getElementById('liPass').value;
+  if(!u||!p){DB.toast('Please enter username and password');return}
+  var r=DB.login(u,p);
+  if(r.ok){DB.toast('Welcome back, '+r.user.username);setTimeout(function(){location.href='my-a.html'},600)}
+  else DB.toast(r.msg);
+}
+function doReg(){
+  var u=document.getElementById('rgUser').value.trim();
+  var e=document.getElementById('rgEmail').value.trim();
+  var p=document.getElementById('rgPass').value;
+  if(!u||!e||!p){DB.toast('All fields required');return}
+  if(p.length<4){DB.toast('Password too short (min 4 chars)');return}
+  var r=DB.register(u,e,p);
+  if(r.ok){DB.toast('Welcome, '+u);setTimeout(function(){location.href='my-a.html'},600)}
+  else DB.toast(r.msg);
+}
+</script>
+</body></html>

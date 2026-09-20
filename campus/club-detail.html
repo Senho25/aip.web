@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Club · AIP-Campus</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+.cmt-reply{margin-left:36px;border-left:2px solid var(--line);padding-left:16px;margin-top:12px}
+.reply-box{margin-top:12px;display:none}
+.reply-box.open{display:flex;gap:8px;align-items:center}
+.reply-box input{flex:1;padding:8px 12px;border:1px solid var(--line);font-size:13px;outline:none}
+.cmt-actions{display:flex;gap:12px;margin-top:6px;font-size:12px}
+.cmt-actions button{background:none;border:none;cursor:pointer;color:var(--text-mute);font-size:12px;padding:0}
+.cmt-actions button:hover{color:var(--moss)}
+.cmt-actions button.liked{color:var(--moss)}
+.update-delete{background:none;border:none;cursor:pointer;color:var(--text-mute);font-size:12px}
+.update-delete:hover{color:#c0392b}
+</style>
+</head>
+<body>
+<div class="content-layer">
+<nav class="navbar">
+  <a href="../index.html" class="navbar-brand" id="brandArea">
+    <svg class="logo-svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="20" y="26" text-anchor="middle" font-family="Georgia,serif" font-size="18" font-weight="700" fill="currentColor">A</text></svg>
+    <div><div class="name">AIP-Campus</div><div class="sub">CAMPUS · COMMUNITY · CONVERSATION</div></div>
+  </a>
+  <div class="navbar-links">
+    <a href="index.html" data-page="home">Home</a>
+    <a href="clubs.html" data-page="clubs" class="active">Clubs</a>
+    <a href="news.html" data-page="news">News</a>
+    <a href="forum.html" data-page="forum">Forum</a>
+  </div>
+  <div class="navbar-right"></div>
+</nav>
+
+<div class="container" id="main"></div>
+<footer class="site-footer">© 2026 AIP-Campus · <a href="../index.html" style="text-decoration:underline">AIP-Web Home</a></footer>
+</div>
+
+<script src="js/data.js"></script><script src="js/app.js"></script>
+<script>
+App.initNav('clubs');
+const cid=App.getParam('id');
+const c=DB.getClub(cid);
+const user=DB.getCurrentUser();
+let attachedImages=[],attachedFiles=[];
+
+function renderComment(cm,updId){
+  var liked=cm.likedBy&&cm.likedBy.includes(user?user.id:null);
+  var canDelete=user&&(cm.authorId===user.id||DB.isClubAdmin(cid));
+  var replies=(cm.parentId?[]:(c.updates.find(u=>u.id===updId).comments||[]).filter(r=>r.parentId===cm.id));
+  var replyHtml=replies.map(r=>renderComment(r,updId)).join('');
+  return '<div class="comment-item" style="border-bottom:1px solid var(--line)">'+
+    '<div class="comment-avatar" onclick="location.href=\'user-profile.html?uid='+cm.authorId+'\'">'+App.esc(cm.authorName.charAt(0))+'</div>'+
+    '<div class="comment-body">'+
+      '<span class="comment-author" onclick="location.href=\'user-profile.html?uid='+cm.authorId+'\'" style="cursor:pointer">'+App.esc(cm.authorName)+'</span>'+
+      '<div class="post-content" style="margin-top:4px">'+App.renderContent(cm.text)+'</div>'+
+      '<div class="cmt-actions">'+
+        '<button class="'+(liked?'liked':'')+'" onclick="toggleCmtLike(\''+updId+'\',\''+cm.id+'\')">'+Icons.heart+' '+(cm.likes||0)+'</button>'+
+        '<button onclick="openReply(\''+updId+'\',\''+cm.id+'\',\''+App.esc(cm.authorName)+'\')">Reply</button>'+
+        (canDelete?'<button class="update-delete" onclick="delCmt(\''+updId+'\',\''+cm.id+'\')">Delete</button>':'')+
+      '</div>'+
+      '<div class="reply-box" id="reply-'+cm.id+'"><input placeholder="Reply to '+App.esc(cm.authorName)+'..." onkeydown="if(event.key===\'Enter\')submitReply(\''+updId+'\',\''+cm.id+'\')"><button class="btn btn-primary btn-sm" onclick="submitReply(\''+updId+'\',\''+cm.id+'\')">Send</button></div>'+
+    '</div>'+
+  '</div>'+(replies.length?'<div class="cmt-reply">'+replyHtml+'</div>':'');
+}
+
+function render(){
+  const c=DB.getClub(cid);
+  if(!c){
+    document.getElementById('main').innerHTML='<div class="empty-state"><div class="text">Club not found.</div></div>';return;
+  }
+  var isAdmin=DB.isClubAdmin(cid);
+  var isMember=DB.isClubMember(cid);
+  var isFollower=DB.isClubFollower(cid);
+  var followers=c.followers||[],members=c.members||[];
+  var roleBadge=isAdmin?'<span class="role-badge">ADMIN</span>':(isMember?'<span class="role-badge member">MEMBER</span>':'');
+
+  var memberList=members.map(function(m){
+    var u=DB.getUserById(m.id);
+    return '<div class="comment-item" style="border-bottom:1px solid var(--line)">'+
+      '<div class="comment-avatar" onclick="location.href=\'user-profile.html?uid='+m.id+'\'">'+App.esc((u?u.username:m.name).charAt(0))+'</div>'+
+      '<div class="comment-body"><span class="comment-author" style="cursor:pointer" onclick="location.href=\'user-profile.html?uid='+m.id+'\'">'+App.esc(m.name)+'</span>'+
+      (m.role==='admin'?'<span class="role-badge">ADMIN</span>':'')+
+      '<div style="font-size:12px;color:var(--text-mute)">'+(m.role==='admin'?'Founder / Admin':'Member')+'</div></div></div>';
+  }).join('');
+
+  var followerList=followers.length?followers.map(function(f){
+    var u=DB.getUserById(f.id);
+    return '<div class="comment-item" style="border-bottom:1px solid var(--line)">'+
+      '<div class="comment-avatar" onclick="location.href=\'user-profile.html?uid='+f.id+'\'">'+App.esc((u?u.username:f.name).charAt(0))+'</div>'+
+      '<div class="comment-body"><span class="comment-author" style="cursor:pointer" onclick="location.href=\'user-profile.html?uid='+f.id+'\'">'+App.esc(f.name)+'</span>'+
+      '<div style="font-size:12px;color:var(--text-mute)">Follower</div></div></div>';
+  }).join(''):'<p style="color:var(--text-mute);font-size:13px">No followers yet.</p>';
+
+  var updateHtml=c.updates.length?c.updates.map(function(u){
+    var liked=u.likedBy&&user&&u.likedBy.includes(user.id);
+    var canDelete=user&&(u.authorId===user.id||isAdmin);
+    var topComments=(u.comments||[]).filter(function(cm){return !cm.parentId});
+    var commentsHtml=topComments.map(function(cm){return renderComment(cm,u.id)}).join('');
+    return '<div class="post-item" style="flex-direction:column;align-items:stretch;border-bottom:1px solid var(--line)">'+
+      '<div style="display:flex;gap:12px;align-items:flex-start">'+
+        '<div class="post-avatar" style="cursor:default">'+App.esc(((DB.getUserById(u.authorId)||{}).avatar)||'U')+'</div>'+
+        '<div class="post-body" style="flex:1">'+
+          '<div class="post-header"><span class="post-author">'+App.esc(u.title)+'</span><span class="post-time">'+DB.timeAgo(u.createdAt)+'</span></div>'+
+          '<div class="post-content">'+App.renderContent(u.content)+'</div>'+
+          (u.images&&u.images.length?'<div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0">'+u.images.map(function(im){return '<img src="'+im+'" style="max-width:280px;max-height:200px;object-fit:cover">'}).join('')+'</div>':'')+
+          (u.files&&u.files.length?'<div>'+u.files.map(function(fn){return '<span class="post-file">'+Icons.file+' '+fn+'</span>'}).join('')+'</div>':'')+
+          '<div class="post-actions">'+
+            '<button class="post-action '+(liked?'liked':'')+'" onclick="toggleLike(\''+u.id+'\')">'+Icons.heart+'<span>'+(u.likes||0)+'</span></button>'+
+            (canDelete?'<button class="post-action" onclick="delUpdate(\''+u.id+'\')"><span style="font-size:11px">Delete</span></button>':'')+
+          '</div>'+
+          '<div style="margin-top:12px">'+
+            '<div style="font-size:12px;color:var(--text-mute);margin-bottom:8px">'+(u.comments?u.comments.length:0)+' comments</div>'+
+            commentsHtml+
+            (user?'<div style="display:flex;gap:8px;margin-top:12px"><input id="cmt-'+u.id+'" placeholder="Write a comment..." style="flex:1;padding:8px 12px;border:1px solid var(--line);font-size:13px;outline:none"><button class="btn btn-primary btn-sm" onclick="postCmt(\''+u.id+'\')">Post</button></div>':'')+
+          '</div>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }).join(''):'<div class="empty-state"><div class="text">No updates yet.</div></div>';
+
+  var actionBtns='';
+  if(user){
+    if(c.founderId===user.id){
+      actionBtns='<button class="btn btn-outline btn-sm" onclick="disband()">Disband Club</button>';
+    }else if(isMember){
+      actionBtns='<button class="btn btn-outline btn-sm" onclick="leave()">Leave Club</button>';
+    }else{
+      actionBtns='<button class="btn btn-primary btn-sm" onclick="joinClub()">Join Club</button>';
+    }
+    actionBtns+='<button class="btn btn-outline btn-sm" id="followBtn" onclick="toggleFollow()">'+(isFollower?'Following ✓':'Follow')+'</button>';
+  }else{
+    actionBtns='<a href="login.html" class="btn btn-primary btn-sm">Sign In</a>';
+  }
+
+  document.getElementById('main').innerHTML=
+    '<div class="club-detail-header">'+
+      '<div class="club-detail-icon">'+c.icon+'</div>'+
+      '<div style="flex:1"><div class="club-detail-name">'+App.esc(c.name)+(c.certified?'<span class="cert-badge" title="AIP Certified">A</span>':'')+(c.nameCn?' <span style="font-size:14px;color:var(--moss);font-style:normal">'+App.esc(c.nameCn)+'</span>':'')+' '+roleBadge+'</div>'+
+      '<div class="club-detail-desc">'+App.esc(c.description)+'</div>'+
+      '<div class="club-detail-meta"><span>'+members.length+' members</span><span>'+followers.length+' followers</span><span>Founder: '+App.esc(c.founderName)+'</span></div></div>'+
+      '<div style="display:flex;flex-direction:column;gap:8px">'+actionBtns+'</div>'+
+    '</div>'+
+    (c.announcement?'<div style="padding:20px;background:var(--mist);margin-bottom:32px;border-left:3px solid var(--moss)"><strong style="font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:var(--moss)">Announcement</strong><p style="margin-top:8px;font-size:14px">'+App.esc(c.announcement)+'</p></div>':'')+
+    '<div style="display:grid;grid-template-columns:2fr 1fr;gap:32px" class="club-detail-grid"><div>'+
+      '<h2 style="font-family:Georgia,serif;font-size:24px;margin-bottom:20px">Updates</h2>'+updateHtml+
+      (isMember?'<div class="composer" style="margin-top:24px"><div class="composer-toolbar"><button onclick="document.getElementById(\'upImg\').click()" title="Insert image at cursor">'+Icons.image+'</button><button onclick="document.getElementById(\'upFile\').click()" title="Attach file">'+Icons.file+'</button><span class="composer-status">'+(isAdmin?'Admin post':'Member post')+'</span></div>'+
+      '<input id="upTitle" placeholder="Update title" style="width:100%;padding:12px 16px;border:none;border-bottom:1px solid var(--line);background:transparent;font-family:inherit;font-size:15px;color:var(--text)">'+
+      '<textarea id="upContent" placeholder="Write an update... Click the image icon to embed a photo inline." style="width:100%;min-height:100px;padding:16px;border:none;background:transparent;font-family:inherit;font-size:15px;resize:vertical;color:var(--text)"></textarea>'+
+      '<input type="file" id="upImg" accept="image/*" style="display:none"><input type="file" id="upFile" multiple style="display:none">'+
+      '<div id="upAttachedBar" style="padding:8px 16px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:6px"></div>'+
+      '<div class="composer-footer"><span></span><button class="btn btn-primary btn-sm" onclick="postUpdate()">Post Update</button></div></div>':'')+
+    '</div><div>'+
+      '<h2 style="font-family:Georgia,serif;font-size:18px;margin-bottom:16px;color:var(--text-mute)">Members ('+members.length+')</h2>'+memberList+
+      '<h2 style="font-family:Georgia,serif;font-size:18px;margin:32px 0 16px;color:var(--text-mute)">Followers ('+followers.length+')</h2>'+followerList+
+    '</div></div>';
+
+  if(isMember){
+    document.getElementById('upImg').addEventListener('change',async function(e){
+      var f=e.target.files[0];if(!f)return;
+      var b64=await App.fileToBase64(f);
+      App.insertImageAtCursor(document.getElementById('upContent'),b64);
+      e.target.value='';
+    });
+    document.getElementById('upFile').addEventListener('change',function(e){
+      for(var f of e.target.files)attachedFiles.push(f.name);renderUpAttached();
+    });
+  }
+}
+
+function renderUpAttached(){
+  var bar=document.getElementById('upAttachedBar');if(!bar)return;var html='';
+  attachedImages.forEach(function(img,i){html+='<span class="attachment-chip" onclick="attachedImages.splice('+i+',1);renderUpAttached()">Image '+(i+1)+' ×</span>'});
+  attachedFiles.forEach(function(fn,i){html+='<span class="attachment-chip" onclick="attachedFiles.splice('+i+',1);renderUpAttached()">'+fn+' ×</span>'});
+  bar.innerHTML=html;
+}
+function toggleFollow(){
+  if(!user){location.href='login.html';return}
+  var r=DB.toggleFollowClub(cid);
+  if(r.ok){var btn=document.getElementById('followBtn');btn.textContent=r.following?'Following ✓':'Follow'}
+}
+function joinClub(){var r=DB.joinClub(cid);if(r.ok){DB.toast(r.pending?'Request sent':'Welcome!');setTimeout(function(){location.reload()},800)}else DB.toast(r.msg)}
+function leave(){if(confirm('Leave this club?')){var r=DB.leaveClub(cid);if(r.ok)location.reload();else DB.toast(r.msg)}}
+function disband(){if(confirm('Disband this club? This cannot be undone.')){var r=DB.disbandClub(cid);if(r.ok){DB.toast('Club disbanded');setTimeout(function(){location.href='clubs.html'},800)}else DB.toast(r.msg)}}
+function toggleLike(uid){if(!user){location.href='login.html';return}DB.toggleClubUpdateLike(cid,uid);render()}
+function delUpdate(uid){if(confirm('Delete this update?')){DB.deleteClubUpdate(cid,uid);render()}}
+function postCmt(uid){var inp=document.getElementById('cmt-'+uid);var t=inp.value.trim();if(!t)return;DB.addUpdateComment(cid,uid,t);render()}
+function toggleCmtLike(uid,cid2){if(!user){location.href='login.html';return}DB.toggleUpdateCommentLike(cid,uid,cid2);render()}
+function delCmt(uid,cid2){if(confirm('Delete this comment?')){DB.deleteUpdateComment(cid,uid,cid2);render()}}
+function openReply(uid,cid2,authorName){document.getElementById('reply-'+cid2).classList.toggle('open')}
+function submitReply(uid,cid2){var box=document.getElementById('reply-'+cid2);var inp=box.querySelector('input');var t=inp.value.trim();if(!t)return;DB.addUpdateComment(cid,uid,t,cid2);render()}
+function postUpdate(){
+  var t=document.getElementById('upTitle').value.trim();
+  var ct=document.getElementById('upContent').value.trim();
+  if(!t||!ct){DB.toast('Title and content required');return}
+  var r=DB.addClubUpdate(cid,t,ct,attachedImages,attachedFiles);
+  if(r.ok){DB.toast('Update posted');setTimeout(function(){location.reload()},600)}else DB.toast(r.msg);
+}
+render();
+</script>
+</body></html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>New Club · AIP-Campus</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="content-layer">
+<nav class="navbar">
+  <a href="../index.html" class="navbar-brand" id="brandArea">
+    <svg class="logo-svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="20" y="26" text-anchor="middle" font-family="Georgia,serif" font-size="18" font-weight="700" fill="currentColor">A</text></svg>
+    <div><div class="name">AIP-Campus</div><div class="sub">CAMPUS · COMMUNITY · CONVERSATION</div></div>
+  </a>
+  <div class="navbar-links">
+    <a href="clubs.html" data-page="clubs" class="active">Clubs</a>
+  </div>
+  <div class="navbar-right"></div>
+</nav>
+
+<div class="container-narrow">
+  <div class="page-header"><div class="header-en">Create</div><h1>New Club</h1><p>Found a new organization. You become the founder.</p></div>
+  <div class="form-card">
+    <div class="form-group"><label class="form-label">Club Name <span class="required">*</span></label><input id="cName" placeholder="e.g. Debate Society"></div>
+    <div class="form-group"><label class="form-label">Chinese Name (optional)</label><input id="cNameCn" placeholder="如：辩论社"></div>
+    <div class="form-group"><label class="form-label">Description <span class="required">*</span></label><textarea id="cDesc" rows="3" placeholder="What is this club about?"></textarea></div>
+    <div class="form-group">
+      <label class="form-label">Join Type</label>
+      <select id="cJoin" style="width:100%;padding:10px 14px;border:1px solid var(--line);background:var(--card);font-size:14px;outline:none">
+        <option value="open">Open — anyone can join</option>
+        <option value="apply">Apply — approval required</option>
+        <option value="invite">Invite — by invitation only</option>
+      </select>
+    </div>
+    <button class="btn btn-primary btn-lg" style="width:100%;justify-content:center" onclick="create()">Create Club</button>
+  </div>
+</div>
+</div>
+<script src="js/data.js"></script><script src="js/app.js"></script>
+<script>
+App.initNav('clubs');
+if(!DB.getCurrentUser())location.href='login.html';
+function create(){
+  var n=document.getElementById('cName').value.trim();
+  var cn=document.getElementById('cNameCn').value.trim();
+  var d=document.getElementById('cDesc').value.trim();
+  var jt=document.getElementById('cJoin').value;
+  if(!n||!d){DB.toast('Name and description required');return}
+  var r=DB.createClub(n,d,jt);
+  if(r.ok){
+    if(cn){var clubs=DB.getClubs();var c=clubs.find(function(x){return x.name===n&&x.founderName===DB.getCurrentUser().username});if(c){c.nameCn=cn;DB._set(DB.KEYS.CLUBS,clubs)}}
+    DB.toast('Club created');setTimeout(function(){location.href='clubs.html'},800);
+  }else{DB.toast(r.msg||'Failed')}
+}
+</script>
+</body></html>

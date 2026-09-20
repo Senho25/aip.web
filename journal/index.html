@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIP-Journal</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Georgia','Noto Serif SC',serif;background:#0a0a0a;color:#e8e4dc;min-height:100vh}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1200px;margin:0 auto;padding:80px 40px}
+
+.head{text-align:center;margin-bottom:100px}
+.head .kicker{font-size:11px;letter-spacing:0.4em;text-transform:uppercase;color:#888;margin-bottom:20px}
+.head h1{font-size:clamp(48px,8vw,96px);font-weight:400;font-style:italic;letter-spacing:-0.02em;line-height:1}
+.head .cn{font-family:'Noto Serif SC',serif;font-size:18px;color:#666;margin-top:24px;letter-spacing:0.2em}
+
+.pubs{display:grid;grid-template-columns:1fr 1fr;gap:2px}
+.pub{min-height:60vh;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:80px;cursor:pointer;transition:opacity 0.3s;text-align:center}
+.pub:hover{opacity:0.9}
+.pub.paradox{background:#0a0a0a;color:#e8e4dc}
+.pub.Laurel{background:#0a0a0a;color:#e8e4dc;border-left:1px solid rgba(255,255,255,0.1)}
+
+.pub .label{font-size:11px;letter-spacing:0.3em;text-transform:uppercase;margin-bottom:20px}
+.pub.paradox .label{color:#e03030}
+.pub.Laurel .label{color:#d4e8a0}
+.pub h2{font-size:clamp(40px,6vw,72px);font-weight:400;font-style:italic;margin-bottom:20px;line-height:1.05}
+.pub p{font-size:16px;line-height:1.8;max-width:400px;margin-bottom:32px;opacity:0.6}
+.pub .enter{display:inline-block;padding:12px 32px;border:1px solid currentColor;font-size:12px;letter-spacing:0.2em;text-transform:uppercase;transition:all 0.3s}
+.pub.paradox .enter:hover{background:#e03030;color:#fff;border-color:#e03030}
+.pub.Laurel .enter:hover{background:#d4e8a0;color:#000;border-color:#d4e8a0}
+
+.back{position:fixed;top:32px;left:40px;font-size:12px;letter-spacing:0.1em;opacity:0.5;z-index:10}
+.back:hover{opacity:1}
+
+@media(max-width:800px){
+  .pubs{grid-template-columns:1fr}
+  .pub{padding:60px 40px;min-height:50vh}
+  .pub.Laurel{border-left:none;border-top:1px solid rgba(255,255,255,0.1)}
+}
+</style>
+</head>
+<body>
+<a href="../index.html" class="back">← A-Web</a>
+<div class="wrap">
+  <div class="head">
+    <div class="kicker">AIP · Journal</div>
+    <h1>Two voices.<br>Two worlds.</h1>
+    <div class="cn">论与影 · 思与帧</div>
+  </div>
+  <div class="pubs">
+    <a href="paradox.html" class="pub paradox">
+      <div class="label">Academic</div>
+      <h2>Paradox</h2>
+      <p>A journal of thought and argument. Where contradiction becomes clarity.</p>
+      <span class="enter">Read Paradox</span>
+    </a>
+    <a href="Laurel.html" class="pub Laurel">
+      <div class="label">Photography</div>
+      <h2>Laurel</h2>
+      <p>Frames, light, and the quiet geometry of the world. Coming soon.</p>
+      <span class="enter">View Laurel</span>
+    </a>
+  </div>
+</div>
+</body>
+</html>

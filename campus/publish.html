@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Publish News · AIP-Campus</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+.pub-layout{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start}
+@media(max-width:900px){.pub-layout{grid-template-columns:1fr}}
+.pub-editor,.pub-preview{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:24px}
+.pub-preview h2{font-family:Georgia,serif;font-size:32px;line-height:1.2;margin-bottom:8px;color:var(--text)}
+.pub-preview .meta{font-size:13px;color:var(--text-mute);margin-bottom:24px}
+.pub-preview .slogan{font-size:18px;color:var(--moss);margin-bottom:24px;font-style:italic}
+.pub-preview .body{font-size:15px;line-height:1.8;color:var(--text)}
+.pub-preview .body img{max-width:100%;border-radius:4px;margin:12px 0}
+.toolbar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.toolbar button{padding:6px 12px;font-size:13px;background:none;border:1px solid var(--line);cursor:pointer;border-radius:4px;color:var(--text)}
+.toolbar button:hover{border-color:var(--moss);color:var(--moss)}
+#nContent{width:100%;min-height:400px;border:1px solid var(--line);border-radius:4px;padding:16px;font-family:inherit;font-size:15px;line-height:1.7;resize:vertical;background:var(--bg);color:var(--text)}
+.pdf-opts{margin-top:12px;padding:12px;border:1px dashed var(--line);border-radius:4px}
+.pdf-opts label{display:block;font-size:13px;margin:6px 0;color:var(--text)}
+.pdf-opts select{width:100%;padding:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);margin-top:4px}
+</style>
+</head>
+<body>
+<div class="content-layer">
+<nav class="navbar">
+  <a href="../index.html" class="navbar-brand" id="brandArea">
+    <svg class="logo-svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="20" y="26" text-anchor="middle" font-family="Georgia,serif" font-size="18" font-weight="700" fill="currentColor">A</text></svg>
+    <div><div class="name">AIP-Campus</div><div class="sub">SHEN WAI · INTERNATIONAL ACADEMY</div></div>
+  </a>
+  <div class="navbar-links"><a href="news.html" data-page="news" class="active">News</a></div>
+  <div class="navbar-right"></div>
+</nav>
+
+<div class="container-wide">
+  <div class="page-header"><div class="header-en">Publish</div><h1>Publish News</h1><p>Write your article and see it live.</p></div>
+  <div class="pub-layout">
+    <!-- LEFT: Editor -->
+    <div class="pub-editor">
+      <div class="form-group"><label class="form-label">Title *</label><input id="nTitle" placeholder="News title" oninput="updatePreview()"></div>
+      <div class="form-group"><label class="form-label">Topic</label>
+        <select id="nTopic" onchange="updatePreview()"><option>Announcement</option><option>Event</option><option>Academic</option><option>Club</option><option>Platform</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Slogan / Subtitle</label><input id="nSlogan" placeholder="One-line summary" oninput="updatePreview()"></div>
+      <div class="form-group"><label class="form-label">Content *</label>
+        <div class="toolbar">
+          <button type="button" onclick="document.getElementById('nImg').click()">Insert Image</button>
+          <button type="button" onclick="document.getElementById('nPdf').click()">Attach PDF</button>
+        </div>
+        <textarea id="nContent" rows="14" placeholder="Write the full article... Images embed at cursor." oninput="updatePreview()"></textarea>
+        <input type="file" id="nImg" accept="image/*" style="display:none">
+        <input type="file" id="nPdf" accept=".pdf,application/pdf" style="display:none">
+        <div id="pdfOpts" class="pdf-opts" style="display:none">
+          <label>PDF display mode:
+            <select id="pdfMode"><option value="attach">As attachment (download link)</option><option value="inline">Inline embed (if width fits)</option></select>
+          </label>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Post as Club (admin only)</label>
+        <select id="nClub"><option value="">-- Yourself --</option></select>
+      </div>
+      <button class="btn btn-primary btn-lg" style="width:100%;justify-content:center" onclick="publish()">Publish</button>
+    </div>
+    <!-- RIGHT: Live Preview -->
+    <div class="pub-preview">
+      <div class="header-en" style="font-size:11px;letter-spacing:0.2em;color:var(--text-mute);text-transform:uppercase;margin-bottom:16px">Preview</div>
+      <h2 id="pvTitle">Your Title Here</h2>
+      <div class="meta" id="pvMeta">By You · Just now · 0 views</div>
+      <div class="slogan" id="pvSlogan">Your one-line summary appears here.</div>
+      <div class="body" id="pvBody">Start writing... your content will render here in real time.</div>
+    </div>
+  </div>
+</div>
+</div>
+<script src="js/data.js"></script><script src="js/app.js"></script>
+<script>
+App.initNav('news');
+if(!DB.getCurrentUser())location.href='login.html';
+
+var pdfData=null;
+
+document.getElementById('nImg').addEventListener('change',async function(e){
+  var f=e.target.files[0];if(!f)return;
+  var b64=await App.fileToBase64(f);
+  var ta=document.getElementById('nContent');
+  App.insertImageAtCursor(ta,b64);
+  updatePreview();
+  e.target.value='';
+});
+
+document.getElementById('nPdf').addEventListener('change',async function(e){
+  var f=e.target.files[0];if(!f)return;
+  pdfData={name:f.name,data:await App.fileToBase64(f)};
+  document.getElementById('pdfOpts').style.display='block';
+  e.target.value='';
+});
+
+function updatePreview(){
+  document.getElementById('pvTitle').textContent=document.getElementById('nTitle').value||'Your Title Here';
+  document.getElementById('pvSlogan').textContent=document.getElementById('nSlogan').value||'Your one-line summary appears here.';
+  document.getElementById('pvBody').innerHTML=App.renderContent(document.getElementById('nContent').value)||'<em style="color:var(--text-mute)">Start writing...</em>';
+}
+
+const myClubs=DB.getUserClubs();
+document.getElementById('nClub').innerHTML='<option value="">-- Yourself --</option>'+myClubs.map(c=>`<option value="${c.id}">${App.esc(c.name)} (admin)</option>`).join('');
+
+function publish(){
+  const t=document.getElementById('nTitle').value.trim();
+  const tp=document.getElementById('nTopic').value;
+  const s=document.getElementById('nSlogan').value.trim();
+  const c=document.getElementById('nContent').value.trim();
+  const cl=document.getElementById('nClub').value;
+  if(!t||!c){DB.toast('Title and content required');return}
+  var attachments=[];
+  if(pdfData){
+    var mode=document.getElementById('pdfMode').value;
+    attachments.push({name:pdfData.name,data:pdfData.data,mode:mode});
+  }
+  const r=DB.publishNews(t,tp,s||t,c,cl||null,attachments);
+  if(r.ok){DB.toast('Published');setTimeout(()=>location.href='news.html',800)}
+}
+</script>
+</body></html>

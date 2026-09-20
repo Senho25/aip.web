@@ -9,8 +9,6 @@ const DB = {
   },
   _get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},
   _set(k,v){localStorage.setItem(k,JSON.stringify(v));this._sync()},
-  _get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},
-  _set(k,v){localStorage.setItem(k,JSON.stringify(v));this._sync()},
   SB_URL:'https://nyrosucxqgdnmztykdir.supabase.co',
   SB_KEY:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im55cm9zdWN4cWdkbm16dHlrZGlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk4NzUzNzAsImV4cCI6MjEwNTQ1MTM3MH0.Hvxb7YD1QezlKWlcJB7C0XIHNkVqQlSSv5XqitX06EQ',
   _syncTimer:null,

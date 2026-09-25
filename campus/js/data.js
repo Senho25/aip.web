@@ -20,17 +20,32 @@ const DB = {
     clearTimeout(this._pushTimer);
     this._pushTimer=setTimeout(()=>this._push(),800);
   },
+  _deepMerge(local,server){
+    if(!local||!server||typeof local!=='object'||typeof server!=='object')return server||local;
+    if(Array.isArray(local)&&Array.isArray(server))return this._mergeArrays(local,server);
+    var out={};
+    for(var k in server)out[k]=server[k];
+    for(var k in local){
+      if(k in out){
+        if(Array.isArray(local[k])&&Array.isArray(out[k]))out[k]=this._mergeArrays(local[k],out[k]);
+        else if(typeof local[k]==='object'&&typeof out[k]==='object'&&local[k]&&out[k])out[k]=this._deepMerge(local[k],out[k]);
+        else{
+          var lt=local.updatedAt||local.createdAt||0,st=out.updatedAt||out.createdAt||0;
+          if(lt>=st)out[k]=local[k];
+        }
+      }else out[k]=local[k];
+    }
+    return out;
+  },
   _mergeArrays(local,server){
     if(!Array.isArray(local)||!Array.isArray(server))return server||local;
     var map={};
     server.forEach(function(x){if(x&&x.id)map[x.id]=x});
+    var self=this;
     local.forEach(function(x){
       if(!x||!x.id)return;
       if(!map[x.id])map[x.id]=x;
-      else{
-        var lt=x.updatedAt||x.createdAt||0,st=map[x.id].updatedAt||map[x.id].createdAt||0;
-        if(lt>=st)map[x.id]=x;
-      }
+      else map[x.id]=self._deepMerge(x,map[x.id]);
     });
     return Object.keys(map).map(function(id){return map[id]});
   },

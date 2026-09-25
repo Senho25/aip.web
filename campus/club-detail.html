@@ -198,6 +198,6 @@ function postUpdate(){
   var r=DB.addClubUpdate(cid,t,ct,attachedImages,attachedFiles);
   if(r.ok){DB.toast('Update posted');setTimeout(function(){location.reload()},600)}else DB.toast(r.msg);
 }
-render();
+DB.init().then(render);
 </script>
 </body></html>

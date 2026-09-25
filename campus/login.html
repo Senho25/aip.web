@@ -70,7 +70,7 @@ function doLogin(){
   var p=document.getElementById('liPass').value;
   if(!u||!p){DB.toast('Please enter username and password');return}
   var r=DB.login(u,p);
-  if(r.ok){DB.toast('Welcome back, '+r.user.username);setTimeout(function(){location.href='my-a.html'},600)}
+  if(r.ok){DB.toast('Welcome back, '+r.user.username);setTimeout(function(){location.href='my-a.html'},800)}
   else DB.toast(r.msg);
 }
 function doReg(){
@@ -80,7 +80,7 @@ function doReg(){
   if(!u||!e||!p){DB.toast('All fields required');return}
   if(p.length<4){DB.toast('Password too short (min 4 chars)');return}
   var r=DB.register(u,e,p);
-  if(r.ok){DB.toast('Welcome, '+u);setTimeout(function(){location.href='my-a.html'},600)}
+  if(r.ok){DB.toast('Welcome, '+u);DB._push();setTimeout(function(){location.href='my-a.html'},1200)}
   else DB.toast(r.msg);
 }
 </script>

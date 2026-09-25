@@ -89,7 +89,7 @@ function render(){
     </div>`;
   }).join('');
 }
-render();
+DB.init().then(render);
 document.querySelectorAll('[data-sort]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-sort]').forEach(x=>x.classList.remove('active'));b.classList.add('active');sort=b.dataset.sort;render()});
 document.querySelectorAll('[data-tag]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-tag]').forEach(x=>x.classList.remove('active'));b.classList.add('active');tag=b.dataset.tag;render()});
 App.setupGlobalSearch(document.getElementById('searchInput'),document.getElementById('searchResults'));

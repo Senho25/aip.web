@@ -50,6 +50,6 @@ function render(){
   document.getElementById('list').innerHTML=html;
 }
 document.getElementById('search').addEventListener('input',render);
-render();
+DB.init().then(render);
 </script>
 </body></html>

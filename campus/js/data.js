@@ -15,6 +15,7 @@ const DB = {
   _pushTimer:null,
   _pullTimer:null,
   _pushing:false,
+  ready:null,
   _markDirty(k){if(k!=='aip_theme'&&k!=='aip_campus_v1_2'&&k!=='aip_session')this._dirty.add(k)},
   _schedulePush(){
     clearTimeout(this._pushTimer);
@@ -108,7 +109,18 @@ const DB = {
       var rows=await r.json();
       if(rows&&rows[0]&&rows[0].data){
         var d=rows[0].data;
-        for(var k in d){if(k!=='aip_session')localStorage.setItem(k,JSON.stringify(d[k]))}
+        for(var k in d){
+          if(k==='aip_session')continue;
+          var local=localStorage.getItem(k);
+          if(local&&Array.isArray(d[k])){
+            try{
+              var merged=this._mergeArrays(JSON.parse(local),d[k]);
+              localStorage.setItem(k,JSON.stringify(merged));
+            }catch(e){localStorage.setItem(k,JSON.stringify(d[k]))}
+          }else{
+            localStorage.setItem(k,JSON.stringify(d[k]));
+          }
+        }
         return true;
       }
     }catch(e){}
@@ -117,12 +129,16 @@ const DB = {
   uid(){return 'id_'+Date.now()+'_'+Math.random().toString(36).slice(2,7)},
 
   async init(){
-    var hadServer=await this.syncFromServer();
-    if(!localStorage.getItem(this.KEYS.INITED)){
-      if(!hadServer){this._seed()}
-      localStorage.setItem(this.KEYS.INITED,'1');
-    }
-    this._pullTimer=setInterval(()=>this._pull(),8000);
+    if(this.ready)return this.ready;
+    this.ready=(async()=>{
+      var hadServer=await this.syncFromServer();
+      if(!localStorage.getItem(this.KEYS.INITED)){
+        if(!hadServer){this._seed()}
+        localStorage.setItem(this.KEYS.INITED,'1');
+      }
+      this._pullTimer=setInterval(()=>this._pull(),8000);
+    })();
+    return this.ready;
   },
   _seed(){
     this._set(this.KEYS.USERS,[]);

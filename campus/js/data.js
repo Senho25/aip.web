@@ -1,4 +1,4 @@
-/* ===== AIP-Campus Data Layer v1.0.0 ===== */
+/* ===== AIP-Campus Data Layer v2.0 — incremental sync ===== */
 const DB = {
   KEYS: {
     USERS:'aip_users', SESSION:'aip_session', FORUMS:'aip_forums', NEWS:'aip_news',
@@ -8,25 +8,84 @@ const DB = {
     INITED:'aip_campus_v1_2'
   },
   _get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},
-  _set(k,v){localStorage.setItem(k,JSON.stringify(v));this._sync()},
+  _set(k,v){localStorage.setItem(k,JSON.stringify(v));this._markDirty(k);this._schedulePush()},
   SB_URL:'https://nyrosucxqgdnmztykdir.supabase.co',
   SB_KEY:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im55cm9zdWN4cWdkbm16dHlrZGlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk4NzUzNzAsImV4cCI6MjEwNTQ1MTM3MH0.Hvxb7YD1QezlKWlcJB7C0XIHNkVqQlSSv5XqitX06EQ',
-  _syncTimer:null,
-  _sync(){
-    clearTimeout(this._syncTimer);
-    this._syncTimer=setTimeout(()=>{
-      var all={};
-      for(var i=0;i<localStorage.length;i++){
-        var key=localStorage.key(i);
-        if(key==='aip_theme'||key==='aip_campus_v1_2')continue;
-        try{all[key]=JSON.parse(localStorage.getItem(key))}catch(e){}
+  _dirty:new Set(),
+  _pushTimer:null,
+  _pullTimer:null,
+  _pushing:false,
+  _markDirty(k){if(k!=='aip_theme'&&k!=='aip_campus_v1_2'&&k!=='aip_session')this._dirty.add(k)},
+  _schedulePush(){
+    clearTimeout(this._pushTimer);
+    this._pushTimer=setTimeout(()=>this._push(),800);
+  },
+  _mergeArrays(local,server){
+    if(!Array.isArray(local)||!Array.isArray(server))return server||local;
+    var map={};
+    server.forEach(function(x){if(x&&x.id)map[x.id]=x});
+    local.forEach(function(x){
+      if(!x||!x.id)return;
+      if(!map[x.id])map[x.id]=x;
+      else{
+        var lt=x.updatedAt||x.createdAt||0,st=map[x.id].updatedAt||map[x.id].createdAt||0;
+        if(lt>=st)map[x.id]=x;
       }
-      fetch(this.SB_URL+'/rest/v1/site_data?id=eq.1',{
+    });
+    return Object.keys(map).map(function(id){return map[id]});
+  },
+  async _push(){
+    if(this._pushing||this._dirty.size===0)return;
+    this._pushing=true;
+    try{
+      var r=await fetch(this.SB_URL+'/rest/v1/site_data?id=eq.1&select=data',{headers:{'apikey':this.SB_KEY}});
+      var rows=await r.json();
+      var serverData=(rows&&rows[0]&&rows[0].data)||{};
+      var payload={};
+      Array.from(this._dirty).forEach(function(k){
+        try{payload[k]=JSON.parse(localStorage.getItem(k))}catch(e){}
+      });
+      for(var k in payload){
+        if(serverData[k]!==undefined){
+          payload[k]=this._mergeArrays(payload[k],serverData[k]);
+        }
+      }
+      var merged=Object.assign({},serverData,payload);
+      await fetch(this.SB_URL+'/rest/v1/site_data?id=eq.1',{
         method:'PUT',
         headers:{'apikey':this.SB_KEY,'Authorization':'Bearer '+this.SB_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
-        body:JSON.stringify({id:1,data:all})
-      }).catch(()=>{});
-    },500);
+        body:JSON.stringify({id:1,data:merged})
+      });
+      this._dirty.clear();
+    }catch(e){}
+    this._pushing=false;
+  },
+  async _pull(){
+    try{
+      var r=await fetch(this.SB_URL+'/rest/v1/site_data?id=eq.1&select=data',{headers:{'apikey':this.SB_KEY}});
+      var rows=await r.json();
+      if(rows&&rows[0]&&rows[0].data){
+        var d=rows[0].data;
+        var changed=false;
+        for(var k in d){
+          if(k==='aip_session')continue;
+          var local=localStorage.getItem(k);
+          var serverStr=JSON.stringify(d[k]);
+          if(local!==serverStr){
+            if(Array.isArray(d[k])&&local){
+              try{
+                var merged=this._mergeArrays(JSON.parse(local),d[k]);
+                localStorage.setItem(k,JSON.stringify(merged));
+              }catch(e){localStorage.setItem(k,serverStr)}
+            }else{
+              localStorage.setItem(k,serverStr);
+            }
+            changed=true;
+          }
+        }
+        if(changed&&typeof render==='function')render();
+      }
+    }catch(e){}
   },
   async syncFromServer(){
     try{
@@ -34,7 +93,7 @@ const DB = {
       var rows=await r.json();
       if(rows&&rows[0]&&rows[0].data){
         var d=rows[0].data;
-        for(var k in d){localStorage.setItem(k,JSON.stringify(d[k]))}
+        for(var k in d){if(k!=='aip_session')localStorage.setItem(k,JSON.stringify(d[k]))}
         return true;
       }
     }catch(e){}
@@ -48,9 +107,9 @@ const DB = {
       if(!hadServer){this._seed()}
       localStorage.setItem(this.KEYS.INITED,'1');
     }
+    this._pullTimer=setInterval(()=>this._pull(),8000);
   },
   _seed(){
-    // Empty platform — no seeded users, clubs, news, or forums.
     this._set(this.KEYS.USERS,[]);
     this._set(this.KEYS.FORUMS,[]);
     this._set(this.KEYS.NEWS,[]);
@@ -338,7 +397,6 @@ const DB = {
     u.banned=!!banned;this._set(this.KEYS.USERS,users);return{ok:true};
   },
   getOnlineUsers(){
-    // Mock: return all users who logged in within last 5 min
     const now=Date.now();
     return this.getUsers().filter(u=>u.lastActive&&now-u.lastActive<300000).slice(0,50);
   },

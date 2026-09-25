@@ -130,13 +130,17 @@ const DB = {
 
   async init(){
     if(this.ready)return this.ready;
+    var self=this;
+    window.addEventListener('storage',function(e){
+      if(e.key&&e.key.indexOf('aip_')===0&&typeof render==='function'){try{render()}catch(err){}}
+    });
     this.ready=(async()=>{
-      var hadServer=await this.syncFromServer();
-      if(!localStorage.getItem(this.KEYS.INITED)){
-        if(!hadServer){this._seed()}
-        localStorage.setItem(this.KEYS.INITED,'1');
+      var hadServer=await self.syncFromServer();
+      if(!localStorage.getItem(self.KEYS.INITED)){
+        if(!hadServer){self._seed()}
+        localStorage.setItem(self.KEYS.INITED,'1');
       }
-      this._pullTimer=setInterval(()=>this._pull(),8000);
+      self._pullTimer=setInterval(()=>self._pull(),8000);
     })();
     return this.ready;
   },
